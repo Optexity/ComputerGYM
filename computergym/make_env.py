@@ -1,23 +1,16 @@
-from enum import Enum
-
 import gymnasium as gym
 from computergym.envs.browser.openended_website import OpenEndedWebsite
 
+from .envs import EnvTypes
 from .obs_processors import ObsProcessorTypes
 
 
-class EnvTypes(Enum):
-    browser = "browser"
-    computer = "computer"
+def make_env(
+    env_name: str, url: str, env_type: EnvTypes, obs_processors: list[ObsProcessorTypes]
+) -> gym.Env:
 
-
-def make_env(env_name: str, env_type: str, obs_processors: list[str]) -> gym.Env:
-    env_type = EnvTypes[env_type]
-    obs_processors = [
-        ObsProcessorTypes[obs_processor] for obs_processor in obs_processors
-    ]
     if env_type == EnvTypes.browser:
-        return OpenEndedWebsite(obs_processors)
+        return OpenEndedWebsite(url, obs_processors)
     if env_type == EnvTypes.computer:
         pass
 
