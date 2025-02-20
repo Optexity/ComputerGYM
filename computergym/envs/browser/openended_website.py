@@ -4,6 +4,13 @@ from computergym.obs_processors import ObsProcessorTypes, get_obs_processor_func
 class OpenEndedWebsite:
     def __init__(self, obs_processors: dict[ObsProcessorTypes, function]):
         self.obs_processors = obs_processors
+        self.history = []
+        self.main_observation = {}
+        self.obs = {}
+        self.action = None
+        self.terminated = False
+        self.truncated = False
+        self.info = {}
 
     def reset(self):
         pass
