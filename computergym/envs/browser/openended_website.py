@@ -1,5 +1,6 @@
 import browsergym.core
 import gymnasium as gym
+from computergym.actions import ActionTypes
 from computergym.obs_processors import ObsProcessorTypes, get_obs_processor_function
 
 
@@ -16,6 +17,8 @@ class OpenEndedWebsite(gym.Env):
         self.terminated = False
         self.truncated = False
         self.info = {}
+
+        self.action_space = [ActionTypes.click, ActionTypes.input_text]
 
         ## TODO: remove this when we implement our own environment
         self.env = gym.make(
@@ -75,8 +78,8 @@ class OpenEndedWebsite(gym.Env):
     def seed(self, seed=None):
         pass
 
-    def get_action_space(self):
-        pass
+    def get_action_space(self) -> list[ActionTypes]:
+        return self.action_space
 
-    def get_observation_space(self):
+    def get_observation_space(self) -> list[ObsProcessorTypes]:
         pass
