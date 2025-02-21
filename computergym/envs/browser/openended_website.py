@@ -1,5 +1,6 @@
 import copy
 import logging
+import os
 import re
 import time
 
@@ -31,22 +32,32 @@ logger = logging.getLogger(__name__)
 
 
 # Convert numpy array to PIL Image and save
-def save_screenshot(screenshot_array, filename="screenshot.png"):
+def save_screenshot(screenshot_array: np.ndarray, save_path: str, filename: str):
+    if save_path is None:
+        return
+    os.makedirs(save_path, exist_ok=True)
+    full_path = os.path.join(save_path, filename)
     if isinstance(screenshot_array, np.ndarray):
         img = Image.fromarray(screenshot_array)
-        img.save(filename)
+        img.save(full_path)
 
 
 class OpenEndedWebsite(gym.Env):
-    def __init__(self, url: str, obs_processors: list[ObsProcessorTypes]):
+    def __init__(
+        self, url: str, obs_processors: list[ObsProcessorTypes], cache_dir: str = None
+    ):
         self.url = url
         self.obs_processors = obs_processors
+        self.cache_dir = cache_dir
+        if self.cache_dir:
+            os.makedirs(self.cache_dir, exist_ok=True)
         self.history = []
         self.obs = {}
         self.action = None
         self.terminated = False
         self.truncated = False
         self.info = {}
+        self.current_step = 0
 
         self.action_space = [
             ActionTypes.click,
@@ -87,18 +98,25 @@ class OpenEndedWebsite(gym.Env):
                 temp[processor] = axtree_processor(obs["axtree_object"])
             elif processor == ObsProcessorTypes.screenshot:
                 temp[processor] = screenshot_processor(obs["screenshot"])
-                save_screenshot(temp[processor], "screenshot.png")
+                save_screenshot(
+                    temp[processor],
+                    self.cache_dir,
+                    f"screenshot-{self.current_step}.png",
+                )
             elif processor == ObsProcessorTypes.som:
                 temp[processor] = som_processor(
                     obs["screenshot"], obs["extra_element_properties"]
                 )
-                save_screenshot(temp[processor], "som.png")
+                save_screenshot(
+                    temp[processor], self.cache_dir, f"som-{self.current_step}.png"
+                )
             else:
                 print(f"Warning: ObsProcessor {processor} not implemented. Skipping.")
         return temp
 
     def reset(self):
         ## TODO: remove self.env when we implement our own environment
+        self.current_step = 0
         obs, info = self.env.reset()
         self.obs = self.format_obs(obs)
         return self.obs, info
@@ -123,6 +141,7 @@ class OpenEndedWebsite(gym.Env):
         )
 
     def step(self, action_type: ActionTypes, action_params: list[str]):
+        self.current_step += 1
         ## TODO: remove self.env when we implement our own environment
         action = self.get_browser_gym_action(action_type, action_params)
         obs, reward, terminated, truncated, info = self.env.step(action)
@@ -250,7 +269,8 @@ class OpenEndedWebsite(gym.Env):
 
         return obs
 
-    def reset(self, seed=None):
+    def reset_(self, seed=None):
+        self.current_step = 0
         self.browser = _get_global_playwright().chromium.launch(headless=False)
         self.context = self.browser.new_context()
         self.context.expose_binding(
@@ -265,8 +285,8 @@ class OpenEndedWebsite(gym.Env):
         info = {}
         return obs, info
 
-    def step(self, action: Action) -> tuple:
-
+    def step_(self, action: Action) -> tuple:
+        self.current_step += 1
         # self.last_action = action
 
         info = {}

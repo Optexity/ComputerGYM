@@ -8,11 +8,15 @@ from .obs_processors import ObsProcessorTypes
 
 
 def make_env(
-    env_name: str, url: str, env_type: EnvTypes, obs_processors: list[ObsProcessorTypes]
+    env_name: str,
+    url: str,
+    env_type: EnvTypes,
+    obs_processors: list[ObsProcessorTypes],
+    cache_dir: str = None,
 ) -> gym.Env | OpenEndedWebsite:
 
     if env_type == EnvTypes.browser:
-        return OpenEndedWebsite(url, obs_processors)
+        return OpenEndedWebsite(url, obs_processors, cache_dir=cache_dir)
     if env_type == EnvTypes.computer:
         pass
 
