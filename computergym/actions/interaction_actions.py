@@ -12,13 +12,13 @@ class ClickAction(Action):
         """
         super().__init__(ActionTypes.click)
 
-    @classmethod
-    def get_action_description(cls):
+    @staticmethod
+    def get_action_description():
         description = f"""Click on element with ID."""
         return description
 
-    @classmethod
-    def get_parameters_description(cls):
+    @staticmethod
+    def get_parameters_description():
         description = f"""This takes single args -> ID of the element to be clicked. ID must be an integer."""
         return description
 
@@ -33,15 +33,14 @@ class InputText(Action):
         Initialize the InputText class.
         """
         super().__init__(ActionTypes.input_text)
-        self.function_name = ActionTypes.input_text.value
 
-    @classmethod
-    def get_action_description(cls):
+    @staticmethod
+    def get_action_description():
         description = f"""Input text into element with ID."""
         return description
 
-    @classmethod
-    def get_parameters_description(cls):
+    @staticmethod
+    def get_parameters_description():
         description = f"""This takes two args -> ID of the element to input text. ID must be a integer. Text to be input. Text must be a string.
-        Example: {cls.action_name}(int_input_id, "Hello World!")"""
+        Example: {ActionTypes.input_text.value}(int_input_id, "Hello World!")"""
         return description

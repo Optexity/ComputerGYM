@@ -9,7 +9,7 @@ from .obs_processors import ObsProcessorTypes
 
 def make_env(
     env_name: str, url: str, env_type: EnvTypes, obs_processors: list[ObsProcessorTypes]
-) -> Any[gym.Env, OpenEndedWebsite]:
+) -> gym.Env | OpenEndedWebsite:
 
     if env_type == EnvTypes.browser:
         return OpenEndedWebsite(url, obs_processors)

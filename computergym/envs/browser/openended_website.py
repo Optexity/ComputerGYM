@@ -57,7 +57,10 @@ class OpenEndedWebsite(gym.Env):
         self.obs = self.format_obs(obs)
         return self.obs, info
 
-    def step(self, action):
+    def step(self, action_type: ActionTypes, action_params: list[str]):
+        new_params = [f'"{param}"' for param in action_params]
+        action = f"""```{action_type.value}({','.join(new_params)})```"""
+        print(action)
         ## TODO: remove self.env when we implement our own environment
         obs, reward, terminated, truncated, info = self.env.step(action)
         self.obs = self.format_obs(obs)

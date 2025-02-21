@@ -39,8 +39,8 @@ class Action:
         self.action_type = action_type
         self.action_name = action_type.value
 
-    @classmethod
-    def get_action_description(cls):
+    @staticmethod
+    def get_action_description():
         """
         Get the description of the action.
 
@@ -51,8 +51,8 @@ class Action:
             "This method should be overridden by subclasses to provide action descriptions."
         )
 
-    @classmethod
-    def get_parameters_description(cls):
+    @staticmethod
+    def get_parameters_description():
         """
         Get the parameters of the action.
 
