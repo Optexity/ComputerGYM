@@ -1,16 +1,17 @@
 import browsergym.core
 import gymnasium as gym
 from computergym.actions import ActionTypes
-from computergym.obs_processors import ObsProcessorTypes, get_obs_processor_function
+from computergym.obs_processors import (
+    ObsProcessorTypes,
+    axtree_processor,
+    html_processor,
+)
 
 
 class OpenEndedWebsite(gym.Env):
     def __init__(self, url: str, obs_processors: list[ObsProcessorTypes]):
         self.url = url
         self.obs_processors = obs_processors
-        self.obs_processors_functions = [
-            get_obs_processor_function(x) for x in obs_processors
-        ]
         self.history = []
         self.obs = {}
         self.action = None
@@ -40,15 +41,13 @@ class OpenEndedWebsite(gym.Env):
             "active_page_index": obs["active_page_index"],
         }
 
-        for processor, function in zip(
-            self.obs_processors, self.obs_processors_functions
-        ):
+        for processor in self.obs_processors:
             if processor == ObsProcessorTypes.html:
-                temp[processor] = function(obs["dom_object"])
+                temp[processor] = html_processor(obs["dom_object"])
             elif processor == ObsProcessorTypes.axtree:
-                temp[processor] = function(obs["axtree_object"])
+                temp[processor] = axtree_processor(obs["axtree_object"])
             else:
-                temp[processor] = function(obs[processor])
+                print(f"Warning: ObsProcessor {processor} not implemented. Skipping.")
         return temp
 
     def reset(self):
