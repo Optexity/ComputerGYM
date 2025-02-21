@@ -58,6 +58,7 @@ class OpenEndedWebsite(gym.Env):
         return self.obs, info
 
     def step(self, action_type: ActionTypes, action_params: list[str]):
+        ## TODO: this currently is to handle browsergym actions
         new_params = [f'"{param}"' for param in action_params]
         action = f"""```{action_type.value}({','.join(new_params)})```"""
         print(action)
