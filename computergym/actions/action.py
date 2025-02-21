@@ -38,6 +38,7 @@ class Action:
         """
         self.action_type = action_type
         self.action_name = action_type.value
+        self.action_params = {}
 
     @staticmethod
     def get_action_description():
