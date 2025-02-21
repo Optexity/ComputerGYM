@@ -1,7 +1,8 @@
 from enum import Enum, unique
 from typing import Any, Callable
 
-from browsergym.utils.obs import flatten_axtree_to_str, flatten_dom_to_str, prune_html
+from .axtree_processor import axtree_processor
+from .html_processor import html_processor
 
 
 @unique
@@ -17,13 +18,9 @@ def get_obs_processor_function(
     obs_processor_type: ObsProcessorTypes,
 ) -> Callable[[Any], str]:
     if obs_processor_type == ObsProcessorTypes.html:
-
-        def func(dom_object):
-            return prune_html(flatten_dom_to_str(dom_object))
-
-        return func
+        return html_processor
     if obs_processor_type == ObsProcessorTypes.axtree:
-        return flatten_axtree_to_str
+        return axtree_processor
     if obs_processor_type == ObsProcessorTypes.screenshot:
         pass
     if obs_processor_type == ObsProcessorTypes.som:
