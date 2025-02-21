@@ -1,11 +1,22 @@
 import browsergym.core
 import gymnasium as gym
+import numpy as np
 from computergym.actions import ActionTypes
 from computergym.obs_processors import (
     ObsProcessorTypes,
     axtree_processor,
     html_processor,
+    screenshot_processor,
+    som_processor,
 )
+from PIL import Image
+
+
+# Convert numpy array to PIL Image and save
+def save_screenshot(screenshot_array, filename="screenshot.png"):
+    if isinstance(screenshot_array, np.ndarray):
+        img = Image.fromarray(screenshot_array)
+        img.save(filename)
 
 
 class OpenEndedWebsite(gym.Env):
@@ -19,7 +30,11 @@ class OpenEndedWebsite(gym.Env):
         self.truncated = False
         self.info = {}
 
-        self.action_space = [ActionTypes.click, ActionTypes.input_text]
+        self.action_space = [
+            ActionTypes.click,
+            ActionTypes.input_text,
+            ActionTypes.scroll,
+        ]
 
         ## TODO: remove this when we implement our own environment
         self.env = gym.make(
@@ -46,6 +61,14 @@ class OpenEndedWebsite(gym.Env):
                 temp[processor] = html_processor(obs["dom_object"])
             elif processor == ObsProcessorTypes.axtree:
                 temp[processor] = axtree_processor(obs["axtree_object"])
+            elif processor == ObsProcessorTypes.screenshot:
+                temp[processor] = screenshot_processor(obs["screenshot"])
+                save_screenshot(temp[processor], "screenshot.png")
+            elif processor == ObsProcessorTypes.som:
+                temp[processor] = som_processor(
+                    obs["screenshot"], obs["extra_element_properties"]
+                )
+                save_screenshot(temp[processor], "som.png")
             else:
                 print(f"Warning: ObsProcessor {processor} not implemented. Skipping.")
         return temp
@@ -57,14 +80,20 @@ class OpenEndedWebsite(gym.Env):
         return self.obs, info
 
     def get_browser_gym_action(
-        self, action_type: ActionTypes, action_params: list[str]
+        self, action_type: ActionTypes, action_params: list[str | int]
     ):
         ## TODO: this currently is to handle browsergym actions
-        new_params = [f'"{param}"' for param in action_params]
         if action_type == ActionTypes.click:
+            new_params = [f'"{param}"' for param in action_params]
             return f"""```{action_type.value}({','.join(new_params)})```"""
         elif action_type == ActionTypes.input_text:
+            new_params = [f'"{param}"' for param in action_params]
             return f"""```fill({','.join(new_params)})```"""
+        elif action_type == ActionTypes.scroll:
+            # For scroll, convert params to int and don't add quotes
+            new_params = [str(int(param)) for param in action_params]
+            return f"""```scroll({','.join(new_params)})```"""
+
         raise ValueError(
             f"Invalid action type: {action_type}. Supported types are: {self.action_space}"
         )

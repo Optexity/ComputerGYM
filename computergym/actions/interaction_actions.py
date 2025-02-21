@@ -44,3 +44,26 @@ class InputText(Action):
         description = f"""This takes two args -> ID of the element to input text. ID must be a integer. Text to be input. Text must be a string.
         Example: {ActionTypes.input_text.value}(int_input_id, "Hello World!")"""
         return description
+
+
+class ScrollAction(Action):
+    """
+    Represents a scroll action in the ComputerGYM environment.
+    """
+
+    def __init__(self):
+        """
+        Initialize the ScrollAction class.
+        """
+        super().__init__(ActionTypes.scroll)
+
+    @staticmethod
+    def get_action_description():
+        description = f"""Scroll the page with a given amount of pixels horizontally and vertically. Dispatches a wheel event."""
+        return description
+
+    @staticmethod
+    def get_parameters_description():
+        description = f"""Amounts in pixels as integers, positive for right or down scrolling, negative for left or up scrolling.
+        Examples: {ActionTypes.scroll.value}(0, 200), {ActionTypes.scroll.value}(-50, -100)"""
+        return description

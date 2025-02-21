@@ -1,5 +1,5 @@
 from .action import ActionTypes
-from .interaction_actions import ClickAction, InputText
+from .interaction_actions import ClickAction, InputText, ScrollAction
 
 
 def get_action_description(action_type: ActionTypes) -> str:
@@ -16,6 +16,8 @@ def get_action_description(action_type: ActionTypes) -> str:
         return ClickAction.get_action_description()
     elif action_type == ActionTypes.input_text:
         return InputText.get_action_description()
+    elif action_type == ActionTypes.scroll:
+        return ScrollAction.get_action_description()
     else:
         raise ValueError(f"Unknown action type: {action_type}")
 
@@ -34,5 +36,7 @@ def get_parameters_description(action_type: ActionTypes) -> str:
         return ClickAction.get_parameters_description()
     elif action_type == ActionTypes.input_text:
         return InputText.get_parameters_description()
+    elif action_type == ActionTypes.scroll:
+        return ScrollAction.get_parameters_description()
     else:
         raise ValueError(f"Unknown action type: {action_type}")
