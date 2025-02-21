@@ -57,12 +57,22 @@ class OpenEndedWebsite(gym.Env):
         self.obs = self.format_obs(obs)
         return self.obs, info
 
-    def step(self, action_type: ActionTypes, action_params: list[str]):
+    def get_browser_gym_action(
+        self, action_type: ActionTypes, action_params: list[str]
+    ):
         ## TODO: this currently is to handle browsergym actions
         new_params = [f'"{param}"' for param in action_params]
-        action = f"""```{action_type.value}({','.join(new_params)})```"""
-        print(action)
+        if action_type == ActionTypes.click:
+            return f"""```{action_type.value}({','.join(new_params)})```"""
+        elif action_type == ActionTypes.input_text:
+            return f"""```fill({','.join(new_params)})```"""
+        raise ValueError(
+            f"Invalid action type: {action_type}. Supported types are: {self.action_space}"
+        )
+
+    def step(self, action_type: ActionTypes, action_params: list[str]):
         ## TODO: remove self.env when we implement our own environment
+        action = self.get_browser_gym_action(action_type, action_params)
         obs, reward, terminated, truncated, info = self.env.step(action)
         self.obs = self.format_obs(obs)
         return self.obs, reward, terminated, truncated, info
