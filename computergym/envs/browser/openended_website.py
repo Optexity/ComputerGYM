@@ -1,22 +1,20 @@
 import copy
+import json
 import logging
 import os
 import re
 import time
 
 import browsergym.core
+import computergym.actions.functions as actions_module
 import gymnasium as gym
 import numpy as np
 import playwright.sync_api
 from computergym.actions import Action, ActionTypes
+from computergym.actions.functions import *
+from computergym.chats.chat import Chat
 from computergym.envs.browser import _get_global_playwright
-from computergym.obs_processors import (
-    ObsProcessorTypes,
-    axtree_processor,
-    html_processor,
-    screenshot_processor,
-    som_processor,
-)
+from computergym.obs_processors import ObsProcessorTypes
 from computergym.obs_processors.observations import (
     MarkingError,
     _post_extract,
@@ -26,7 +24,7 @@ from computergym.obs_processors.observations import (
     extract_merged_axtree,
     extract_screenshot,
 )
-from computergym.utils import save_screenshot
+from computergym.obs_processors.utils import format_obs
 
 logger = logging.getLogger(__name__)
 
@@ -36,13 +34,11 @@ class History:
         self,
         step_number: int,
         obs: dict,
-        action_type: ActionTypes,
-        action_params: list[str],
+        action: Action,
     ):
         self.step_number = step_number
         self.obs = obs
-        self.action_type = action_type
-        self.action_params = action_params
+        self.action = action
 
 
 class OpenEndedWebsite(gym.Env):
@@ -61,12 +57,21 @@ class OpenEndedWebsite(gym.Env):
         self.truncated = False
         self.info = {}
         self.current_step = 0
+        self.chat: Chat = None
+        self.goal_object = None
 
         self.action_space = [
             ActionTypes.click,
             ActionTypes.input_text,
             ActionTypes.scroll,
         ]
+
+        # Map action types to their callable functions
+        self.action_callables = {
+            ActionTypes.click: click,
+            ActionTypes.input_text: fill,
+            ActionTypes.scroll: scroll,
+        }
 
         ## TODO: remove this when we implement our own environment
         self.env = gym.make(
@@ -82,47 +87,15 @@ class OpenEndedWebsite(gym.Env):
         self.page: playwright.sync_api.Page = None
         self.page_history: dict = {}
 
-    def format_obs(self, obs):
-        temp = {
-            "chat_messages": obs["chat_messages"],
-            "screenshot": obs["screenshot"],
-            "goal_object": obs["goal_object"],
-            "last_action": obs["last_action"],
-            "last_action_error": obs["last_action_error"],
-            "open_pages_urls": obs["open_pages_urls"],
-            "open_pages_titles": obs["open_pages_titles"],
-            "active_page_index": obs["active_page_index"],
-        }
-
-        for processor in self.obs_processors:
-            if processor == ObsProcessorTypes.html:
-                temp[processor] = html_processor(obs["dom_object"])
-            elif processor == ObsProcessorTypes.axtree:
-                temp[processor] = axtree_processor(obs["axtree_object"])
-            elif processor == ObsProcessorTypes.screenshot:
-                temp[processor] = screenshot_processor(obs["screenshot"])
-                save_screenshot(
-                    temp[processor],
-                    self.cache_dir,
-                    f"screenshot-{self.current_step}.png",
-                )
-            elif processor == ObsProcessorTypes.som:
-                temp[processor] = som_processor(
-                    obs["screenshot"], obs["extra_element_properties"]
-                )
-                save_screenshot(
-                    temp[processor], self.cache_dir, f"som-{self.current_step}.png"
-                )
-            else:
-                print(f"Warning: ObsProcessor {processor} not implemented. Skipping.")
-        return temp
-
     def reset(self):
         ## TODO: remove self.env when we implement our own environment
         self.current_step = 0
         obs, info = self.env.reset()
-        self.obs = self.format_obs(obs)
+        self.obs = format_obs(obs, self.obs_processors)
         self.history = []
+        # import pdb
+
+        # pdb.set_trace()
         return self.obs, info
 
     def get_browser_gym_action(
@@ -147,11 +120,15 @@ class OpenEndedWebsite(gym.Env):
     def step(self, action_type: ActionTypes, action_params: list[str]):
         ## TODO: remove self.env when we implement our own environment
         action = self.get_browser_gym_action(action_type, action_params)
-        history = History(self.current_step, self.obs, action_type, action_params)
-        self.history.append(history)
+        print(action)
+        # history = History(self.current_step, self.obs, action_type, action_params)
+        # self.history.append(history)
+        import pdb
+
+        pdb.set_trace()
 
         obs, reward, terminated, truncated, info = self.env.step(action)
-        self.obs = self.format_obs(obs)
+        self.obs = format_obs(obs, self.obs_processors)
         self.current_step += 1
         return self.obs, reward, terminated, truncated, info
         self.obs = {}
@@ -233,14 +210,17 @@ class OpenEndedWebsite(gym.Env):
                 f"Unexpected: active page has been closed ({self.page})."
             )
 
+    def _wait_for_user_message(self):
+        # if last message is from the assistant, wait for a user message to continue
+        if self.chat.messages[-1]["role"] == "assistant":
+            self.chat.wait_for_user_message()
+
     def _get_obs(self):
         # for retries_left in reversed(range(EXTRACT_OBS_MAX_TRIES)):
         try:
             # pre-extraction, mark dom elements (set bid, set dynamic attributes like value and checked)
             _pre_extract(
                 self.page,
-                tags_to_mark="all",
-                lenient=True,
             )
 
             dom = extract_dom_snapshot(self.page)
@@ -258,9 +238,10 @@ class OpenEndedWebsite(gym.Env):
         # obs is generic to all tasks
         obs = {
             "chat_messages": tuple(copy.deepcopy(self.chat.messages)),
-            "goal_object": tuple(
-                copy.deepcopy(self.goal_object)
-            ),  # new goal format, list of messages openai style
+            "goal_object": None,
+            # "goal_object": tuple(
+            #     copy.deepcopy(self.goal_object)
+            # ),  # new goal format, list of messages openai style
             "open_pages_urls": tuple(page.url for page in self.context.pages),
             "open_pages_titles": tuple(page.title() for page in self.context.pages),
             "active_page_index": np.asarray([self.context.pages.index(self.page)]),
@@ -269,67 +250,98 @@ class OpenEndedWebsite(gym.Env):
             "dom_object": dom,
             "axtree_object": axtree,
             "extra_element_properties": extra_properties,
-            "last_action": self.last_action,
-            "last_action_error": self.last_action_error,
-            "elapsed_time": np.asarray([time.time() - self.start_time]),
+            "last_action": None,
+            "last_action_error": None,
         }
 
         return obs
 
-    def reset_(self, seed=None):
+    def reset_(self):
         self.current_step = 0
         self.history = []
-        self.browser = _get_global_playwright().chromium.launch(headless=False)
+        pw: playwright.sync_api.Playwright = _get_global_playwright()
+        # important: change playwright's test id attribute from "data-testid" to "bid"
+        pw.selectors.set_test_id_attribute("bid")
+        self.browser = pw.chromium.launch(headless=False)
         self.context = self.browser.new_context()
         self.context.expose_binding(
             "browsergym_page_activated",
             lambda source: self._activate_page_from_js(source["page"]),
         )
+
+        # create the chat
+        self.chat = Chat(
+            headless=False,
+            chat_size=(500, 800),
+            record_video_dir=None,
+        )
+
         self.page = self.context.new_page()
+        self.page.goto(self.url, timeout=10000)
+
+        # initialize the chat
+        self.chat.add_message(
+            role="assistant",
+            msg="Hi! I am your UI assistant, I can perform web tasks for you. What can I help you with?",
+        )
+
         self._wait_dom_loaded()
         self._active_page_check()
+
+        self.infeasible_message_received = False
+
+        self._wait_for_user_message()
         obs = self._get_obs()
-        obs = self.format_obs(obs)
+        self.obs = format_obs(obs, self.obs_processors)
         info = {}
-        return obs, info
+
+        # import pdb
+
+        # pdb.set_trace()
+
+        return self.obs, info
 
     def step_(self, action: Action) -> tuple:
 
+        history = History(self.current_step, self.obs, action)
+        self.history.append(history)
+        # action = self.get_browser_gym_action(action.action_type, action.action_params)
+        print(action)
         # self.last_action = action
 
         info = {}
         info["action_exec_start"] = time.time()
         info["action_exec_timeout"] = 0
 
-        # def send_message_to_user(text: str):
-        #     if not isinstance(text, str):
-        #         raise ValueError(f"Forbidden value: {text} is not a string")
-        #     self.chat.add_message(role="assistant", msg=text)
+        def send_message_to_user(text: str):
+            if not isinstance(text, str):
+                raise ValueError(f"Forbidden value: {text} is not a string")
+            self.chat.add_message(role="assistant", msg=text)
 
-        # def report_infeasible_instructions(reason: str):
-        #     if not isinstance(reason, str):
-        #         raise ValueError(f"Forbidden value: {reason} is not a string")
-        #     self.chat.add_message(role="infeasible", msg=reason)
-        #     self.infeasible_message_received = True
+        def report_infeasible_instructions(reason: str):
+            if not isinstance(reason, str):
+                raise ValueError(f"Forbidden value: {reason} is not a string")
+            self.chat.add_message(role="infeasible", msg=reason)
+            self.infeasible_message_received = True
 
         # try to execute the action
         logger.debug(f"Executing action")
         try:
-            # if self.action_mapping:
-            #     code = self.action_mapping(action)
-            # else:
-            #     code = action
-            # execute_python_code(
-            #     code,
-            #     self.page,
-            #     send_message_to_user=send_message_to_user,
-            #     report_infeasible_instructions=report_infeasible_instructions,
-            # )
+            action_callable = self.action_callables[action.action_type]
+            print(action.action_type)
+            print(action_callable)
+            print(action.action_params)
+            print(*action.action_params)
 
-            # TODO: implement action execution
+            # args_dict = json.loads(action.action_params)
+            # action_callable(**args_dict, page=self.page)
+
+            action_callable(str(*action.action_params), page=self.page)
 
             self.last_action_error = ""
         except Exception as e:
+            print("action execution failed")
+            print(e)
             self.last_action_error = f"{type(e).__name__}: {e}"
             match = re.match(
                 "TimeoutError: Timeout ([0-9]+)ms exceeded.", self.last_action_error
@@ -338,8 +350,6 @@ class OpenEndedWebsite(gym.Env):
                 info["action_exec_timeout"] = (
                     float(match.groups()[0]) / 1000
                 )  # ms to sec
-        logger.debug(f"Action executed")
-        info["action_exec_stop"] = time.time()
 
         # wait a bit (for the JavaScript callback to set the active page)
         time.sleep(0.5)  # wait for JS events to be fired (half a second)
@@ -355,9 +365,15 @@ class OpenEndedWebsite(gym.Env):
 
         # new step API wants a 5-tuple (gymnasium)
         obs = self._get_obs()
-        obs = self.format_obs(obs)
+        self.obs = format_obs(obs, self.obs_processors)
         reward = 0
-        terminated = False
+        done = (
+            self.chat.messages[-1]["role"] == "user"
+            and self.chat.messages[-1]["message"] == "exit"
+        )
+        terminated = done or (
+            self.infeasible_message_received
+        )  # task or agent can terminate the episode
         truncated = False
         self.current_step += 1
-        return obs, reward, terminated, truncated, info
+        return self.obs, reward, terminated, truncated, info

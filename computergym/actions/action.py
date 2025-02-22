@@ -29,16 +29,21 @@ class Action:
     Base class for all actions in the ComputerGYM environment.
     """
 
-    def __init__(self, action_type: ActionTypes):
+    def __init__(
+        self,
+        action_type: ActionTypes,
+        action_params: list[str] = None,
+    ):
         """
         Initialize the Action class.
 
         Args:
-            action_type (str): The type of action.
+            action_type (ActionTypes): The type of action.
+            action_params (list[str]): The parameters of the action.
         """
         self.action_type = action_type
         self.action_name = action_type.value
-        self.action_params = {}
+        self.action_params = action_params
 
     @staticmethod
     def get_action_description():

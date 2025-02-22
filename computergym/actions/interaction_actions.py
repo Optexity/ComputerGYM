@@ -1,4 +1,5 @@
 from .action import Action, ActionTypes
+from .functions import *
 
 
 class ClickAction(Action):
