@@ -26,20 +26,23 @@ from computergym.obs_processors.observations import (
     extract_merged_axtree,
     extract_screenshot,
 )
-from PIL import Image
+from computergym.utils import save_screenshot
 
 logger = logging.getLogger(__name__)
 
 
-# Convert numpy array to PIL Image and save
-def save_screenshot(screenshot_array: np.ndarray, save_path: str, filename: str):
-    if save_path is None:
-        return
-    os.makedirs(save_path, exist_ok=True)
-    full_path = os.path.join(save_path, filename)
-    if isinstance(screenshot_array, np.ndarray):
-        img = Image.fromarray(screenshot_array)
-        img.save(full_path)
+class History:
+    def __init__(
+        self,
+        step_number: int,
+        obs: dict,
+        action_type: ActionTypes,
+        action_params: list[str],
+    ):
+        self.step_number = step_number
+        self.obs = obs
+        self.action_type = action_type
+        self.action_params = action_params
 
 
 class OpenEndedWebsite(gym.Env):
@@ -51,8 +54,8 @@ class OpenEndedWebsite(gym.Env):
         self.cache_dir = cache_dir
         if self.cache_dir:
             os.makedirs(self.cache_dir, exist_ok=True)
-        self.history = []
-        self.obs = {}
+        self.history: list[History] = []
+        self.obs = None
         self.action = None
         self.terminated = False
         self.truncated = False
@@ -119,6 +122,7 @@ class OpenEndedWebsite(gym.Env):
         self.current_step = 0
         obs, info = self.env.reset()
         self.obs = self.format_obs(obs)
+        self.history = []
         return self.obs, info
 
     def get_browser_gym_action(
@@ -141,11 +145,14 @@ class OpenEndedWebsite(gym.Env):
         )
 
     def step(self, action_type: ActionTypes, action_params: list[str]):
-        self.current_step += 1
         ## TODO: remove self.env when we implement our own environment
         action = self.get_browser_gym_action(action_type, action_params)
+        history = History(self.current_step, self.obs, action_type, action_params)
+        self.history.append(history)
+
         obs, reward, terminated, truncated, info = self.env.step(action)
         self.obs = self.format_obs(obs)
+        self.current_step += 1
         return self.obs, reward, terminated, truncated, info
         self.obs = {}
         self.main_observation = {}
@@ -271,6 +278,7 @@ class OpenEndedWebsite(gym.Env):
 
     def reset_(self, seed=None):
         self.current_step = 0
+        self.history = []
         self.browser = _get_global_playwright().chromium.launch(headless=False)
         self.context = self.browser.new_context()
         self.context.expose_binding(
@@ -286,7 +294,7 @@ class OpenEndedWebsite(gym.Env):
         return obs, info
 
     def step_(self, action: Action) -> tuple:
-        self.current_step += 1
+
         # self.last_action = action
 
         info = {}
@@ -351,5 +359,5 @@ class OpenEndedWebsite(gym.Env):
         reward = 0
         terminated = False
         truncated = False
-
+        self.current_step += 1
         return obs, reward, terminated, truncated, info
