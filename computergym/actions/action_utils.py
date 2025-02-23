@@ -1,6 +1,12 @@
 from pydantic import BaseModel
 
-from .action import ActionTypes, ClickAction, InputText, ScrollAction
+from .action import (
+    ActionTypes,
+    ClickAction,
+    InputText,
+    ScrollAction,
+    action_definitions,
+)
 from .functions import click, fill, scroll
 
 
@@ -20,25 +26,11 @@ def custom_json_schema(action_function: type[BaseModel]) -> dict:
 
 
 def get_action_signature(action_type: ActionTypes) -> dict:
-    if action_type == ActionTypes.click:
-        return custom_json_schema(ClickAction)
-    elif action_type == ActionTypes.input_text:
-        return custom_json_schema(InputText)
-    elif action_type == ActionTypes.scroll:
-        return custom_json_schema(ScrollAction)
-    else:
-        raise ValueError(f"Unknown action type: {action_type}")
+    return custom_json_schema(action_definitions[action_type])
 
 
 def get_action_object(action_type: ActionTypes) -> BaseModel:
-    if action_type == ActionTypes.click:
-        return ClickAction
-    elif action_type == ActionTypes.input_text:
-        return InputText
-    elif action_type == ActionTypes.scroll:
-        return ScrollAction
-    else:
-        raise ValueError(f"Unknown action type: {action_type}")
+    return action_definitions[action_type]
 
 
 def apply_action(action: BaseModel, page=None) -> BaseModel:

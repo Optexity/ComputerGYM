@@ -3,6 +3,19 @@ from enum import Enum, unique
 from pydantic import BaseModel, Field
 
 
+class ClickAction(BaseModel):
+    element_id: str = Field(description="The id of the element to be clicked.")
+
+
+class InputText(BaseModel):
+    element_id: str = Field(description="The id of the element to be clicked.")
+    value: str = Field(description="The text to be input.")
+
+
+class ScrollAction(BaseModel):
+    pass
+
+
 @unique
 class ActionTypes(Enum):
     """
@@ -26,14 +39,8 @@ class ActionTypes(Enum):
     refresh = "refresh"
 
 
-class ClickAction(BaseModel):
-    element_id: str = Field(description="The id of the element to be clicked.")
-
-
-class InputText(BaseModel):
-    element_id: str = Field(description="The id of the element to be clicked.")
-    value: str = Field(description="The text to be input.")
-
-
-class ScrollAction(BaseModel):
-    pass
+action_definitions = {
+    ActionTypes.click: ClickAction,
+    ActionTypes.input_text: InputText,
+    ActionTypes.scroll: ScrollAction,
+}
