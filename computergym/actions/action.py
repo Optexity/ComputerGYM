@@ -39,8 +39,14 @@ class ActionTypes(Enum):
     refresh = "refresh"
 
 
-action_definitions = {
+action_definitions: dict[ActionTypes, BaseModel] = {
     ActionTypes.click: ClickAction,
     ActionTypes.input_text: InputText,
     ActionTypes.scroll: ScrollAction,
+}
+
+action_examples: dict[ActionTypes, BaseModel] = {
+    ActionTypes.click: ClickAction(element_id="12"),
+    ActionTypes.input_text: InputText(element_id="12", value="Hello world!"),
+    ActionTypes.scroll: ScrollAction(),
 }
