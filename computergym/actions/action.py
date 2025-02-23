@@ -1,5 +1,7 @@
 from enum import Enum, unique
 
+from pydantic import BaseModel, Field
+
 
 @unique
 class ActionTypes(Enum):
@@ -24,53 +26,14 @@ class ActionTypes(Enum):
     refresh = "refresh"
 
 
-class Action:
-    """
-    Base class for all actions in the ComputerGYM environment.
-    """
+class ClickAction(BaseModel):
+    element_id: str = Field(description="The id of the element to be clicked.")
 
-    def __init__(self, action_type: ActionTypes):
-        """
-        Initialize the Action class.
 
-        Args:
-            action_type (str): The type of action.
-        """
-        self.action_type = action_type
-        self.action_name = action_type.value
-        self.action_params = {}
+class InputText(BaseModel):
+    element_id: str = Field(description="The id of the element to be clicked.")
+    value: str = Field(description="The text to be input.")
 
-    @staticmethod
-    def get_action_description():
-        """
-        Get the description of the action.
 
-        Returns:
-            str: The description of the action.
-        """
-        raise NotImplementedError(
-            "This method should be overridden by subclasses to provide action descriptions."
-        )
-
-    @staticmethod
-    def get_parameters_description():
-        """
-        Get the parameters of the action.
-
-        Returns:
-            dict: The parameters of the action.
-        """
-        raise NotImplementedError(
-            "This method should be overridden by subclasses to provide action parameters."
-        )
-
-    def do_action(self, *args, **kwargs):
-        """
-        Execute the action.
-
-        Returns:
-            bool: True if the action was successful, False otherwise.
-        """
-        raise NotImplementedError(
-            "This method should be overridden by subclasses to provide action execution"
-        )
+class ScrollAction(BaseModel):
+    pass

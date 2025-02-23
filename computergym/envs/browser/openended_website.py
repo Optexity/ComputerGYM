@@ -8,7 +8,7 @@ import browsergym.core
 import gymnasium as gym
 import numpy as np
 import playwright.sync_api
-from computergym.actions import Action, ActionTypes
+from computergym.actions import ActionTypes
 from computergym.envs.browser import _get_global_playwright
 from computergym.obs_processors import (
     ObsProcessorTypes,
@@ -293,7 +293,7 @@ class OpenEndedWebsite(gym.Env):
         info = {}
         return obs, info
 
-    def step_(self, action: Action) -> tuple:
+    def step_(self, action) -> tuple:
 
         # self.last_action = action
 

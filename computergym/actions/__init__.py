@@ -1,2 +1,2 @@
-from .action import Action, ActionTypes
-from .action_utils import get_action_description, get_parameters_description
+from .action import ActionTypes
+from .action_utils import get_action_object, get_action_signature
