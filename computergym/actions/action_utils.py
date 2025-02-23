@@ -35,8 +35,8 @@ def get_action_object(action_type: ActionTypes) -> BaseModel:
 
 def apply_action(action: BaseModel, page=None) -> BaseModel:
     if isinstance(action, ClickAction):
-        click(bid=action.element_id, page=page)
+        click(bid=action.bid, page=page)
     elif isinstance(action, InputText):
-        fill(bid=action.element_id, value=action.value)
+        fill(bid=action.bid, value=action.value)
     elif isinstance(action, ScrollAction):
         scroll(0, 200)

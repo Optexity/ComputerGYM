@@ -4,11 +4,14 @@ from pydantic import BaseModel, Field
 
 
 class ClickAction(BaseModel):
-    element_id: str = Field(description="The id of the element to be clicked.")
+    """
+    Click on an element with the given bid."""
+
+    bid: str = Field(description="The id of the element to be clicked.")
 
 
 class InputText(BaseModel):
-    element_id: str = Field(description="The id of the element to be clicked.")
+    bid: str = Field(description="The id of the element to be clicked.")
     value: str = Field(description="The text to be input.")
 
 
@@ -46,7 +49,7 @@ action_definitions: dict[ActionTypes, BaseModel] = {
 }
 
 action_examples: dict[ActionTypes, BaseModel] = {
-    ActionTypes.click: ClickAction(element_id="12"),
-    ActionTypes.input_text: InputText(element_id="12", value="Hello world!"),
+    ActionTypes.click: ClickAction(bid="12"),
+    ActionTypes.input_text: InputText(bid="12", value="Hello world!"),
     ActionTypes.scroll: ScrollAction(),
 }

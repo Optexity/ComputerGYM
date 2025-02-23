@@ -100,10 +100,10 @@ class OpenEndedWebsite(gym.Env):
         ## TODO: this currently is to handle browsergym actions
         if isinstance(action, ClickAction):
 
-            return f"""```click("{action.element_id}")```"""
+            return f"""```click("{action.bid}")```"""
         elif isinstance(action, InputText):
 
-            return f"""```fill("{action.element_id}","{action.value}")```"""
+            return f"""```fill("{action.bid}","{action.value}")```"""
 
         raise ValueError(
             f"Invalid action type: {action}. Supported types are: {self.action_space}"
