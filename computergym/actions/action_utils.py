@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 
 from .action import ActionTypes, ClickAction, InputText, ScrollAction
+from .functions import click, fill, scroll
 
 
 def custom_json_schema(action_function: type[BaseModel]) -> dict:
@@ -38,3 +39,12 @@ def get_action_object(action_type: ActionTypes) -> BaseModel:
         return ScrollAction
     else:
         raise ValueError(f"Unknown action type: {action_type}")
+
+
+def apply_action(action: BaseModel, page=None) -> BaseModel:
+    if isinstance(action, ClickAction):
+        click(bid=action.element_id, page=page)
+    elif isinstance(action, InputText):
+        fill(bid=action.element_id, value=action.value)
+    elif isinstance(action, ScrollAction):
+        scroll(0, 200)

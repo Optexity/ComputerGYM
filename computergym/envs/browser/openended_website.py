@@ -11,6 +11,8 @@ import gymnasium as gym
 import numpy as np
 import playwright.sync_api
 from computergym.actions import ActionTypes
+from computergym.actions.action import ActionTypes, ClickAction, InputText, ScrollAction
+from computergym.actions.action_utils import apply_action
 from computergym.actions.functions import *
 from computergym.chats.chat import Chat
 from computergym.envs.browser import _get_global_playwright
@@ -25,6 +27,7 @@ from computergym.obs_processors.observations import (
     extract_screenshot,
 )
 from computergym.obs_processors.utils import format_obs
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +37,7 @@ class History:
         self,
         step_number: int,
         obs: dict,
-        action: Action,
+        action: BaseModel,
     ):
         self.step_number = step_number
         self.obs = obs
@@ -66,13 +69,6 @@ class OpenEndedWebsite(gym.Env):
             ActionTypes.scroll,
         ]
 
-        # Map action types to their callable functions
-        self.action_callables = {
-            ActionTypes.click: click,
-            ActionTypes.input_text: fill,
-            ActionTypes.scroll: scroll,
-        }
-
         ## TODO: remove this when we implement our own environment
         self.env = gym.make(
             "browsergym/openended",
@@ -91,35 +87,31 @@ class OpenEndedWebsite(gym.Env):
         ## TODO: remove self.env when we implement our own environment
         self.current_step = 0
         obs, info = self.env.reset()
-        self.obs = format_obs(obs, self.obs_processors)
+        self.obs = format_obs(
+            obs, self.obs_processors, self.cache_dir, self.current_step
+        )
         self.history = []
         # import pdb
 
         # pdb.set_trace()
         return self.obs, info
 
-    def get_browser_gym_action(
-        self, action_type: ActionTypes, action_params: list[str | int]
-    ):
+    def get_browser_gym_action(self, action: BaseModel):
         ## TODO: this currently is to handle browsergym actions
-        if action_type == ActionTypes.click:
-            new_params = [f'"{param}"' for param in action_params]
-            return f"""```{action_type.value}({','.join(new_params)})```"""
-        elif action_type == ActionTypes.input_text:
-            new_params = [f'"{param}"' for param in action_params]
-            return f"""```fill({','.join(new_params)})```"""
-        elif action_type == ActionTypes.scroll:
-            # For scroll, convert params to int and don't add quotes
-            new_params = [str(int(param)) for param in action_params]
-            return f"""```scroll({','.join(new_params)})```"""
+        if isinstance(action, ClickAction):
+
+            return f"""```click("{action.element_id}")```"""
+        elif isinstance(action, InputText):
+
+            return f"""```fill("{action.element_id}","{action.value}")```"""
 
         raise ValueError(
-            f"Invalid action type: {action_type}. Supported types are: {self.action_space}"
+            f"Invalid action type: {action}. Supported types are: {self.action_space}"
         )
 
-    def step(self, action_type: ActionTypes, action_params: list[str]):
+    def step(self, action: BaseModel) -> tuple:
         ## TODO: remove self.env when we implement our own environment
-        action = self.get_browser_gym_action(action_type, action_params)
+        action = self.get_browser_gym_action(action)
         print(action)
         # history = History(self.current_step, self.obs, action_type, action_params)
         # self.history.append(history)
@@ -128,7 +120,9 @@ class OpenEndedWebsite(gym.Env):
         pdb.set_trace()
 
         obs, reward, terminated, truncated, info = self.env.step(action)
-        self.obs = format_obs(obs, self.obs_processors)
+        self.obs = format_obs(
+            obs, self.obs_processors, self.cache_dir, self.current_step
+        )
         self.current_step += 1
         return self.obs, reward, terminated, truncated, info
         self.obs = {}
@@ -292,7 +286,9 @@ class OpenEndedWebsite(gym.Env):
 
         self._wait_for_user_message()
         obs = self._get_obs()
-        self.obs = format_obs(obs, self.obs_processors)
+        self.obs = format_obs(
+            obs, self.obs_processors, self.cache_dir, self.current_step
+        )
         info = {}
 
         # import pdb
@@ -301,7 +297,7 @@ class OpenEndedWebsite(gym.Env):
 
         return self.obs, info
 
-    def step_(self, action) -> tuple:
+    def step_(self, action: BaseModel) -> tuple:
 
         history = History(self.current_step, self.obs, action)
         self.history.append(history)
@@ -327,16 +323,8 @@ class OpenEndedWebsite(gym.Env):
         # try to execute the action
         logger.debug(f"Executing action")
         try:
-            action_callable = self.action_callables[action.action_type]
-            print(action.action_type)
-            print(action_callable)
-            print(action.action_params)
-            print(*action.action_params)
-
-            # args_dict = json.loads(action.action_params)
-            # action_callable(**args_dict, page=self.page)
-
-            action_callable(str(*action.action_params), page=self.page)
+            ## TODO: what is page
+            apply_action(action, self.page)
 
             self.last_action_error = ""
         except Exception as e:
@@ -365,7 +353,9 @@ class OpenEndedWebsite(gym.Env):
 
         # new step API wants a 5-tuple (gymnasium)
         obs = self._get_obs()
-        self.obs = format_obs(obs, self.obs_processors)
+        self.obs = format_obs(
+            obs, self.obs_processors, self.cache_dir, self.current_step
+        )
         reward = 0
         done = (
             self.chat.messages[-1]["role"] == "user"

@@ -8,7 +8,7 @@ from computergym.obs_processors import (
 from computergym.utils import save_screenshot
 
 
-def format_obs(obs, obs_processors):
+def format_obs(obs, obs_processors, cache_dir: str, current_step: int):
     temp = {
         "chat_messages": obs["chat_messages"],
         "screenshot": obs["screenshot"],
@@ -27,18 +27,16 @@ def format_obs(obs, obs_processors):
             temp[processor] = axtree_processor(obs["axtree_object"])
         elif processor == ObsProcessorTypes.screenshot:
             temp[processor] = screenshot_processor(obs["screenshot"])
-            # save_screenshot(
-            #     temp[processor],
-            #     self.cache_dir,
-            #     f"screenshot-{self.current_step}.png",
-            # )
+            save_screenshot(
+                temp[processor],
+                cache_dir,
+                f"screenshot-{current_step}.png",
+            )
         elif processor == ObsProcessorTypes.som:
             temp[processor] = som_processor(
                 obs["screenshot"], obs["extra_element_properties"]
             )
-            # save_screenshot(
-            #     temp[processor], self.cache_dir, f"som-{self.current_step}.png"
-            # )
+            save_screenshot(temp[processor], cache_dir, f"som-{current_step}.png")
         else:
             print(f"Warning: ObsProcessor {processor} not implemented. Skipping.")
     return temp
