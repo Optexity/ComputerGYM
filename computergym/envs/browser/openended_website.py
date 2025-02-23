@@ -11,7 +11,15 @@ import gymnasium as gym
 import numpy as np
 import playwright.sync_api
 from computergym.actions import ActionTypes
-from computergym.actions.action import ActionTypes, ClickAction, InputText, ScrollAction
+from computergym.actions.action import (
+    ActionTypes,
+    ClickAction,
+    InputText,
+    ScrollDownAction,
+    ScrollLeftAction,
+    ScrollRightAction,
+    ScrollUpAction,
+)
 from computergym.actions.action_utils import apply_action
 from computergym.actions.functions import *
 from computergym.chats.chat import Chat
@@ -66,7 +74,10 @@ class OpenEndedWebsite(gym.Env):
         self.action_space = [
             ActionTypes.click,
             ActionTypes.input_text,
-            ActionTypes.scroll,
+            ActionTypes.scroll_up,
+            ActionTypes.scroll_down,
+            ActionTypes.scroll_left,
+            ActionTypes.scroll_right,
         ]
 
         ## TODO: remove this when we implement our own environment
@@ -104,6 +115,15 @@ class OpenEndedWebsite(gym.Env):
         elif isinstance(action, InputText):
 
             return f"""```fill("{action.bid}","{action.value}")```"""
+
+        elif isinstance(action, ScrollUpAction):
+            return f"""```scroll_up()```"""
+        elif isinstance(action, ScrollDownAction):
+            return f"""```scroll_down()```"""
+        elif isinstance(action, ScrollLeftAction):
+            return f"""```scroll_left()```"""
+        elif isinstance(action, ScrollRightAction):
+            return f"""```scroll_right()```"""
 
         raise ValueError(
             f"Invalid action type: {action}. Supported types are: {self.action_space}"
@@ -273,6 +293,11 @@ class OpenEndedWebsite(gym.Env):
         self.page = self.context.new_page()
         self.page.goto(self.url, timeout=10000)
 
+        self.page.fill("#user_name", "admin")
+        self.page.fill("#user_password", "wx%h/z5WWW0J")
+        self.page.click("#sysverb_login")
+        time.sleep(2)
+
         # initialize the chat
         self.chat.add_message(
             role="assistant",
@@ -283,6 +308,14 @@ class OpenEndedWebsite(gym.Env):
         self._active_page_check()
 
         self.infeasible_message_received = False
+
+        self.chat.add_message(
+            role="user",
+            msg="""
+            Go to the hardware store and order 2 "Standard Laptop" with configuration 
+            {'Additional software requirements': 'Slack, Trello, Zoom, Microsoft Office 365, Google Workspace', 'Adobe Acrobat': False, 'Adobe Photoshop': True}
+            """,
+        )
 
         self._wait_for_user_message()
         obs = self._get_obs()

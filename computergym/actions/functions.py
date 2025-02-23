@@ -272,6 +272,34 @@ def drag_and_drop(from_bid: str, to_bid: str):
     page.mouse.up()
 
 
+def scroll_up(page: playwright.sync_api.Page):
+    """
+    Scroll the page up by half the height of the page.
+    """
+    page.mouse.wheel(0, -page.viewport_size["height"] / 2)
+
+
+def scroll_down(page: playwright.sync_api.Page):
+    """
+    Scroll the page down by half the height of the page.
+    """
+    page.mouse.wheel(0, page.viewport_size["height"] / 2)
+
+
+def scroll_left(page: playwright.sync_api.Page):
+    """
+    Scroll the page left by half the width of the page.
+    """
+    page.mouse.wheel(-page.viewport_size["width"] / 2, 0)
+
+
+def scroll_right(page: playwright.sync_api.Page):
+    """
+    Scroll the page right by half the width of the page.
+    """
+    page.mouse.wheel(page.viewport_size["width"] / 2, 0)
+
+
 # https://playwright.dev/python/docs/api/class-mouse#mouse-wheel
 def scroll(delta_x: float, delta_y: float):
     """

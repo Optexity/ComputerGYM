@@ -4,10 +4,13 @@ from .action import (
     ActionTypes,
     ClickAction,
     InputText,
-    ScrollAction,
+    ScrollDownAction,
+    ScrollLeftAction,
+    ScrollRightAction,
+    ScrollUpAction,
     action_definitions,
 )
-from .functions import click, fill, scroll
+from .functions import *
 
 
 def custom_json_schema(action_function: type[BaseModel]) -> dict:
@@ -37,6 +40,12 @@ def apply_action(action: BaseModel, page=None) -> BaseModel:
     if isinstance(action, ClickAction):
         click(bid=action.bid, page=page)
     elif isinstance(action, InputText):
-        fill(bid=action.bid, value=action.value)
-    elif isinstance(action, ScrollAction):
-        scroll(0, 200)
+        fill(bid=action.bid, value=action.value, page=page)
+    elif isinstance(action, ScrollUpAction):
+        scroll_up(page=page)
+    elif isinstance(action, ScrollDownAction):
+        scroll_down(page=page)
+    elif isinstance(action, ScrollLeftAction):
+        scroll_left(page=page)
+    elif isinstance(action, ScrollRightAction):
+        scroll_right(page=page)
