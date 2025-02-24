@@ -9,6 +9,7 @@ class EnvTypes(Enum):
     computer = "computer"
 
 
+@unique
 class BrowserEnvTypes(Enum):
     openended = "openended"
     workarena = "workarena"
