@@ -47,7 +47,7 @@ def _pre_extract(
             js_frame_mark_elements,
             [frame_bid, BROWSERGYM_ID_ATTRIBUTE, tags_to_mark],
         )
-        # print warning messages if any
+
         for msg in warning_msgs:
             logger.warning(msg)
 

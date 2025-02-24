@@ -191,8 +191,7 @@ class OpenEndedWebsite(gym.Env):
 
             self.last_action_error = ""
         except Exception as e:
-            print("action execution failed")
-            print(e)
+            logging.exception(f"Error while executing action: {action}: {e}")
             self.last_action_error = f"{type(e).__name__}: {e}"
             match = re.match(
                 "TimeoutError: Timeout ([0-9]+)ms exceeded.", self.last_action_error

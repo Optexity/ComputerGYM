@@ -1,3 +1,5 @@
+import logging
+
 from computergym.obs_processors import (
     ObsProcessorTypes,
     axtree_processor,
@@ -5,6 +7,8 @@ from computergym.obs_processors import (
     screenshot_processor,
     som_processor,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def format_obs(obs, obs_processors):
@@ -32,5 +36,5 @@ def format_obs(obs, obs_processors):
                 obs["screenshot"], obs["extra_element_properties"]
             )
         else:
-            print(f"Warning: ObsProcessor {processor} not implemented. Skipping.")
+            logger.warning(f"ObsProcessor {processor} not implemented. Skipping.")
     return temp
