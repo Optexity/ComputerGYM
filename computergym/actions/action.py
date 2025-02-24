@@ -65,6 +65,50 @@ class SelectOption(BaseModel):
     )
 
 
+class Check(BaseModel):
+    """
+    Check a checkbox or radio element with the given bid.
+    """
+
+    bid: str = Field(description="The id of the element to be checked.")
+
+
+class Uncheck(BaseModel):
+    """
+    Uncheck a checkbox or radio element with the given bid.
+    """
+
+    bid: str = Field(description="The id of the element to be unchecked.")
+
+
+class Hover(BaseModel):
+    """
+    Hover over an element with the given bid.
+    """
+
+    bid: str = Field(description="The id of the element to be hovered over.")
+
+
+class Noop(BaseModel):
+    """
+    No operation, wait for a given number of milliseconds before the next action.
+    """
+
+    wait_ms: int = Field(
+        description="The number of milliseconds to wait before the next action."
+    )
+
+
+class TaskComplete(BaseModel):
+    """
+    This action is used to indicate that the task is complete.
+    """
+
+    msg: str = Field(
+        description="The message to be displayed when the task is complete."
+    )
+
+
 @unique
 class ActionTypes(Enum):
     """
@@ -80,6 +124,9 @@ class ActionTypes(Enum):
     input_text = "input_text"
     hover = "hover"
     select_option = "select_option"
+    check = "check"
+    uncheck = "uncheck"
+    noop = "noop"
 
     # TAB ACTIONS
     tab_focus = "tab_focus"
@@ -91,6 +138,9 @@ class ActionTypes(Enum):
     go_forward = "go_forward"
     refresh = "refresh"
 
+    # TASK ACTIONS
+    task_complete = "task_complete"
+
 
 action_definitions: dict[ActionTypes, BaseModel] = {
     ActionTypes.click: ClickAction,
@@ -100,6 +150,11 @@ action_definitions: dict[ActionTypes, BaseModel] = {
     ActionTypes.scroll_left: ScrollLeftAction,
     ActionTypes.scroll_right: ScrollRightAction,
     ActionTypes.select_option: SelectOption,
+    ActionTypes.check: Check,
+    ActionTypes.uncheck: Uncheck,
+    ActionTypes.hover: Hover,
+    ActionTypes.noop: Noop,
+    ActionTypes.task_complete: TaskComplete,
 }
 
 action_examples: dict[ActionTypes, BaseModel] = {
@@ -110,4 +165,9 @@ action_examples: dict[ActionTypes, BaseModel] = {
     ActionTypes.scroll_left: ScrollLeftAction(),
     ActionTypes.scroll_right: ScrollRightAction(),
     ActionTypes.select_option: SelectOption(bid="c48", options=["red", "green"]),
+    ActionTypes.check: Check(bid="12"),
+    ActionTypes.uncheck: Uncheck(bid="12"),
+    ActionTypes.hover: Hover(bid="12"),
+    ActionTypes.noop: Noop(wait_ms=1000),
+    ActionTypes.task_complete: TaskComplete(msg="Task completed successfully!"),
 }

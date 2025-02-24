@@ -12,10 +12,6 @@ from .utils import (
     smooth_move_visual_cursor_to,
 )
 
-page: playwright.sync_api.Page = None
-
-send_message_to_user: callable = None
-report_infeasible_instructions: callable = None
 demo_mode: Literal["off", "default", "all_blue", "only_visible_elements"] = "default"
 retry_with_force: bool = False
 
@@ -25,7 +21,7 @@ inspect.getsource().
 """
 
 
-def send_msg_to_user(text: str):
+def send_msg_to_user(text: str, send_message_to_user: callable = None):
     """
     Sends a message to the user.
 
@@ -35,7 +31,7 @@ def send_msg_to_user(text: str):
     send_message_to_user(text)
 
 
-def report_infeasible(reason: str):
+def report_infeasible(reason: str, report_infeasible_instructions: callable = None):
     """
     Notifies the user that their instructions are infeasible.
 
@@ -45,7 +41,7 @@ def report_infeasible(reason: str):
     report_infeasible_instructions(reason)
 
 
-def noop(wait_ms: float = 1000):
+def noop(wait_ms: float = 1000, page: playwright.sync_api.Page = None):
     """
     Do nothing, and optionally wait for the given time (in milliseconds).
 
@@ -82,7 +78,7 @@ def fill(bid: str, value: str, page: playwright.sync_api.Page):
 
 
 # https://playwright.dev/python/docs/api/class-locator#locator-check
-def check(bid: str):
+def check(bid: str, page: playwright.sync_api.Page):
     """
     Ensure a checkbox or radio element is checked.
 
@@ -99,7 +95,7 @@ def check(bid: str):
 
 
 # https://playwright.dev/python/docs/api/class-locator#locator-uncheck
-def uncheck(bid: str):
+def uncheck(bid: str, page: playwright.sync_api.Page):
     """
     Ensure a checkbox or radio element is unchecked.
 
@@ -164,6 +160,7 @@ def dblclick(
     bid: str,
     button: Literal["left", "middle", "right"] = "left",
     modifiers: list[Literal["Alt", "Control", "ControlOrMeta", "Meta", "Shift"]] = [],
+    page: playwright.sync_api.Page = None,
 ):
     """
     Double click an element.
@@ -183,7 +180,7 @@ def dblclick(
 
 
 # https://playwright.dev/python/docs/api/class-locator#locator-hover
-def hover(bid: str):
+def hover(bid: str, page: playwright.sync_api.Page):
     """
     Hover over an element.
 
@@ -202,7 +199,7 @@ def hover(bid: str):
 
 
 # https://playwright.dev/python/docs/input#keys-and-shortcuts
-def press(bid: str, key_comb: str):
+def press(bid: str, key_comb: str, page: playwright.sync_api.Page):
     """
     Focus the matching element and press a combination of keys. It accepts
     the logical key names that are emitted in the keyboardEvent.key property
@@ -225,7 +222,7 @@ def press(bid: str, key_comb: str):
 
 
 # https://playwright.dev/python/docs/api/class-locator#locator-focus
-def focus(bid: str):
+def focus(bid: str, page: playwright.sync_api.Page):
     """
     Focus the matching element.
 
@@ -238,7 +235,7 @@ def focus(bid: str):
 
 
 # https://playwright.dev/python/docs/api/class-locator#locator-clear
-def clear(bid: str):
+def clear(bid: str, page: playwright.sync_api.Page):
     """
     Clear the input field.
 
@@ -251,7 +248,7 @@ def clear(bid: str):
 
 
 # https://playwright.dev/python/docs/input#drag-and-drop
-def drag_and_drop(from_bid: str, to_bid: str):
+def drag_and_drop(from_bid: str, to_bid: str, page: playwright.sync_api.Page):
     """
     Perform a drag & drop. Hover the element that will be dragged. Press
     left mouse button. Move mouse to the element that will receive the
@@ -302,7 +299,7 @@ def scroll_right(page: playwright.sync_api.Page):
 
 
 # https://playwright.dev/python/docs/api/class-mouse#mouse-wheel
-def scroll(delta_x: float, delta_y: float):
+def scroll(delta_x: float, delta_y: float, page: playwright.sync_api.Page):
     """
     Scroll horizontally and vertically. Amounts in pixels, positive for right or down scrolling, negative for left or up scrolling. Dispatches a wheel event.
 
@@ -314,7 +311,7 @@ def scroll(delta_x: float, delta_y: float):
 
 
 # https://playwright.dev/python/docs/api/class-mouse#mouse-move
-def mouse_move(x: float, y: float):
+def mouse_move(x: float, y: float, page: playwright.sync_api.Page):
     """
     Move the mouse to a location. Uses absolute client coordinates in pixels.
     Dispatches a mousemove event.
@@ -328,7 +325,12 @@ def mouse_move(x: float, y: float):
 
 
 # https://playwright.dev/python/docs/api/class-mouse#mouse-up
-def mouse_up(x: float, y: float, button: Literal["left", "middle", "right"] = "left"):
+def mouse_up(
+    x: float,
+    y: float,
+    button: Literal["left", "middle", "right"] = "left",
+    page: playwright.sync_api.Page = None,
+):
     """
     Move the mouse to a location then release a mouse button. Dispatches
     mousemove and mouseup events.
@@ -345,7 +347,12 @@ def mouse_up(x: float, y: float, button: Literal["left", "middle", "right"] = "l
 
 
 # https://playwright.dev/python/docs/api/class-mouse#mouse-down
-def mouse_down(x: float, y: float, button: Literal["left", "middle", "right"] = "left"):
+def mouse_down(
+    x: float,
+    y: float,
+    button: Literal["left", "middle", "right"] = "left",
+    page: playwright.sync_api.Page = None,
+):
     """
     Move the mouse to a location then press and hold a mouse button. Dispatches
     mousemove and mousedown events.
@@ -363,7 +370,10 @@ def mouse_down(x: float, y: float, button: Literal["left", "middle", "right"] = 
 
 # https://playwright.dev/python/docs/api/class-mouse#mouse-click
 def mouse_click(
-    x: float, y: float, button: Literal["left", "middle", "right"] = "left"
+    x: float,
+    y: float,
+    button: Literal["left", "middle", "right"] = "left",
+    page: playwright.sync_api.Page = None,
 ):
     """
     Move the mouse to a location and click a mouse button. Dispatches mousemove,
@@ -381,7 +391,10 @@ def mouse_click(
 
 # https://playwright.dev/python/docs/api/class-mouse#mouse-dblclick
 def mouse_dblclick(
-    x: float, y: float, button: Literal["left", "middle", "right"] = "left"
+    x: float,
+    y: float,
+    button: Literal["left", "middle", "right"] = "left",
+    page: playwright.sync_api.Page = None,
 ):
     """
     Move the mouse to a location and double click a mouse button. Dispatches
@@ -397,7 +410,13 @@ def mouse_dblclick(
     page.mouse.dblclick(x, y, button=button)
 
 
-def mouse_drag_and_drop(from_x: float, from_y: float, to_x: float, to_y: float):
+def mouse_drag_and_drop(
+    from_x: float,
+    from_y: float,
+    to_x: float,
+    to_y: float,
+    page: playwright.sync_api.Page,
+):
     """
     Drag and drop from a location to a location. Uses absolute client
     coordinates in pixels. Dispatches mousemove, mousedown and mouseup
@@ -421,7 +440,7 @@ def mouse_drag_and_drop(from_x: float, from_y: float, to_x: float, to_y: float):
 
 
 # https://playwright.dev/python/docs/api/class-keyboard#keyboard-press
-def keyboard_press(key: str):
+def keyboard_press(key: str, page: playwright.sync_api.Page):
     """
     Press a combination of keys. Accepts the logical key names that are
     emitted in the keyboardEvent.key property of the keyboard events:
@@ -443,7 +462,7 @@ def keyboard_press(key: str):
 
 
 # https://playwright.dev/python/docs/api/class-keyboard#keyboard-up
-def keyboard_up(key: str):
+def keyboard_up(key: str, page: playwright.sync_api.Page):
     """
     Release a keyboard key. Dispatches a keyup event. Accepts the logical
     key names that are emitted in the keyboardEvent.key property of the
@@ -461,7 +480,7 @@ def keyboard_up(key: str):
 
 
 # https://playwright.dev/python/docs/api/class-keyboard#keyboard-down
-def keyboard_down(key: str):
+def keyboard_down(key: str, page: playwright.sync_api.Page):
     """
     Press and holds a keyboard key. Dispatches a keydown event. Accepts the
     logical key names that are emitted in the keyboardEvent.key property of
@@ -478,7 +497,7 @@ def keyboard_down(key: str):
 
 
 # https://playwright.dev/python/docs/api/class-keyboard#keyboard-type
-def keyboard_type(text: str):
+def keyboard_type(text: str, page: playwright.sync_api.Page):
     """
     Types a string of text through the keyboard. Sends a keydown, keypress/input,
     and keyup event for each character in the text. Modifier keys DO NOT affect
@@ -495,7 +514,7 @@ def keyboard_type(text: str):
 
 
 # https://playwright.dev/python/docs/api/class-keyboard#keyboard-insert-text
-def keyboard_insert_text(text: str):
+def keyboard_insert_text(text: str, page: playwright.sync_api.Page):
     """
     Insert a string of text in the currently focused element. Dispatches only input
     event, does not emit the keydown, keyup or keypress events. Modifier keys DO NOT
@@ -509,7 +528,7 @@ def keyboard_insert_text(text: str):
 
 
 # https://playwright.dev/python/docs/api/class-page#page-goto
-def goto(url: str):
+def goto(url: str, page: playwright.sync_api.Page):
     """
     Navigate to a url.
 
@@ -520,7 +539,7 @@ def goto(url: str):
 
 
 # https://playwright.dev/python/docs/api/class-page#page-go-back
-def go_back():
+def go_back(page: playwright.sync_api.Page):
     """
     Navigate to the previous page in history.
 
@@ -531,7 +550,7 @@ def go_back():
 
 
 # https://playwright.dev/python/docs/api/class-page#page-go-forward
-def go_forward():
+def go_forward(page: playwright.sync_api.Page):
     """
     Navigate to the next page in history.
 
@@ -542,82 +561,82 @@ def go_forward():
 
 
 # https://playwright.dev/python/docs/api/class-browsercontext#browser-context-new-page
-def new_tab():
-    """
-    Open a new tab. It will become the active one.
+# def new_tab(page: playwright.sync_api.Page):
+#     """
+#     Open a new tab. It will become the active one.
 
-    Examples:
-        new_tab()
-    """
-    global page
-    # set the new page as the active page
-    page = page.context.new_page()
-    # trigger the callback that sets this page as active in browsergym
-    page.evaluate(
-        """\
-const event = new Event('pageshow', {
-    bubbles: true,  // Whether the event bubbles up through the DOM or not
-    cancelable: false  // Whether the event can be canceled
-});
-window.dispatchEvent(event);
-"""
-    )
+#     Examples:
+#         new_tab()
+#     """
+#     global page
+#     # set the new page as the active page
+#     page = page.context.new_page()
+#     # trigger the callback that sets this page as active in browsergym
+#     page.evaluate(
+#         """\
+# const event = new Event('pageshow', {
+#     bubbles: true,  // Whether the event bubbles up through the DOM or not
+#     cancelable: false  // Whether the event can be canceled
+# });
+# window.dispatchEvent(event);
+# """
+#     )
 
 
 # https://playwright.dev/python/docs/api/class-page#page-close
-def tab_close():
-    """
-    Close the current tab.
+# def tab_close(page: playwright.sync_api.Page):
+#     """
+#     Close the current tab.
 
-    Examples:
-        tab_close()
-    """
-    global page
-    context = page.context
-    page.close()
-    # set most recent page as active page, or open a new page if needed
-    if context.pages:
-        # TODO: do something more elaborate? (active page history)
-        page = context.pages[-1]
-    else:
-        page = context.new_page()
-    # trigger the callback that sets this page as active in browsergym
-    page.evaluate(
-        """\
-const event = new Event('pageshow', {
-    bubbles: true,  // Whether the event bubbles up through the DOM or not
-    cancelable: false  // Whether the event can be canceled
-});
-window.dispatchEvent(event);
-"""
-    )
+#     Examples:
+#         tab_close()
+#     """
+#     global page
+#     context = page.context
+#     page.close()
+#     # set most recent page as active page, or open a new page if needed
+#     if context.pages:
+#         # TODO: do something more elaborate? (active page history)
+#         page = context.pages[-1]
+#     else:
+#         page = context.new_page()
+#     # trigger the callback that sets this page as active in browsergym
+#     page.evaluate(
+#         """\
+# const event = new Event('pageshow', {
+#     bubbles: true,  // Whether the event bubbles up through the DOM or not
+#     cancelable: false  // Whether the event can be canceled
+# });
+# window.dispatchEvent(event);
+# """
+#     )
 
 
 # https://playwright.dev/python/docs/api/class-page#page-bring-to-front
-def tab_focus(index: int):
-    """
-    Bring tab to front (activate tab).
+# def tab_focus(index: int, page: playwright.sync_api.Page):
+#     """
+#     Bring tab to front (activate tab).
 
-    Examples:
-        tab_focus(2)
-    """
-    global page  # set the focused page as the active page
-    page = page.context.pages[index]
-    page.bring_to_front()
-    # trigger the callback that sets this page as active in browsergym
-    page.evaluate(
-        """\
-const event = new Event('pageshow', {
-    bubbles: true,  // Whether the event bubbles up through the DOM or not
-    cancelable: false  // Whether the event can be canceled
-});
-window.dispatchEvent(event);
-"""
-    )
+#     Examples:
+#         tab_focus(2)
+#     """
+#     global page  # set the focused page as the active page
+#     page = page.context.pages[index]
+#     page.bring_to_front()
+#     # trigger the callback that sets this page as active in browsergym
+#     page.evaluate(
+#         """\
+# const event = new Event('pageshow', {
+#     bubbles: true,  // Whether the event bubbles up through the DOM or not
+#     cancelable: false  // Whether the event can be canceled
+# });
+# window.dispatchEvent(event);
+# """
+#     )
 
 
 # https://playwright.dev/python/docs/input#upload-files
-def upload_file(bid: str, file: str | list[str]):
+def upload_file(bid: str, file: str | list[str], page: playwright.sync_api.Page):
     """
     Click an element and wait for a "filechooser" event, then select one
     or multiple input files for upload. Relative file paths are resolved
@@ -639,7 +658,9 @@ def upload_file(bid: str, file: str | list[str]):
 
 
 # https://playwright.dev/python/docs/input#upload-files
-def mouse_upload_file(x: float, y: float, file: str | list[str]):
+def mouse_upload_file(
+    x: float, y: float, file: str | list[str], page: playwright.sync_api.Page
+):
     """
     Click a location and wait for a "filechooser" event, then select one
     or multiple input files for upload. Relative file paths are resolved
@@ -659,3 +680,12 @@ def mouse_upload_file(x: float, y: float, file: str | list[str]):
 
     file_chooser = fc_info.value
     file_chooser.set_files(file)
+
+
+def task_complete(msg: str = "I'm done!", send_task_complete: callable = None):
+    """
+    This action is used to indicate that the task is complete. Use this only when you think the task given by user is complete and nothing else is needed to be done.
+    When you feel stuck or are not sure, use the `noop` action instead to wait and see if the page reveals more information.
+    """
+    send_task_complete(msg=msg)
+    return True

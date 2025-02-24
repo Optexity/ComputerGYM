@@ -29,6 +29,7 @@ from computergym.utils import save_screenshot, save_str_obs
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
+EXTRACT_OBS_MAX_TRIES = 5
 
 
 class History:
@@ -86,6 +87,11 @@ class OpenEndedWebsite(gym.Env):
             ActionTypes.scroll_left,
             ActionTypes.scroll_right,
             ActionTypes.select_option,
+            ActionTypes.check,
+            ActionTypes.uncheck,
+            ActionTypes.hover,
+            ActionTypes.noop,
+            ActionTypes.task_complete,
         ]
 
         self.reset_variables()
@@ -123,6 +129,7 @@ class OpenEndedWebsite(gym.Env):
         self.infeasible_message_received = False
         self.chat: Chat = None
         self.goal_object = None
+        self.last_action = None
         self.last_action_error = None
 
         # playwright
@@ -161,7 +168,7 @@ class OpenEndedWebsite(gym.Env):
         if self.preprocess_func:
             self.preprocess_func(self.page, self.chat)
 
-        time.sleep(5)
+        time.sleep(10)
 
         self._wait_dom_loaded()
         self._active_page_check()
@@ -169,7 +176,7 @@ class OpenEndedWebsite(gym.Env):
         self.infeasible_message_received = False
 
         self._wait_for_user_message()
-
+        self.goal_object = self.chat.messages[-1]["message"]
         obs = self._get_obs()
         self.obs = format_obs(obs, self.obs_processors)
         self.info = {}
@@ -188,8 +195,14 @@ class OpenEndedWebsite(gym.Env):
         # try to execute the action
         logger.debug(f"Executing action")
         try:
-            ## TODO: what is page
-            apply_action(action, self.page)
+            self.last_action = action
+            apply_action(
+                action,
+                self.page,
+                send_message_to_user=self.send_message_to_user,
+                report_infeasible_instructions=self.report_infeasible_instructions,
+                send_task_complete=self.send_task_complete,
+            )
 
             self.last_action_error = ""
         except Exception as e:
@@ -224,7 +237,7 @@ class OpenEndedWebsite(gym.Env):
             and self.chat.messages[-1]["message"] == "exit"
         )
         terminated = done or (
-            self.infeasible_message_received
+            self.infeasible_message_received or self.terminated
         )  # task or agent can terminate the episode
         truncated = False
         self.current_step += 1
@@ -293,21 +306,37 @@ class OpenEndedWebsite(gym.Env):
             self.chat.wait_for_user_message()
 
     def _get_obs(self):
-        # for retries_left in reversed(range(EXTRACT_OBS_MAX_TRIES)):
-        try:
-            # pre-extraction, mark dom elements (set bid, set dynamic attributes like value and checked)
-            _pre_extract(
-                self.page,
-            )
+        for retries_left in reversed(range(EXTRACT_OBS_MAX_TRIES)):
+            try:
+                # pre-extraction, mark dom elements (set bid, set dynamic attributes like value and checked)
+                _pre_extract(
+                    self.page,
+                )
 
-            dom = extract_dom_snapshot(self.page)
-            axtree = extract_merged_axtree(self.page)
-            extra_properties = extract_dom_extra_properties(dom)
-        except (playwright.sync_api.Error, MarkingError) as e:
-            err_msg = str(e)
-            # try to add robustness to async events (detached / deleted frames)
-            raise e
-            # break
+                dom = extract_dom_snapshot(self.page)
+                axtree = extract_merged_axtree(self.page)
+                extra_properties = extract_dom_extra_properties(dom)
+            except (playwright.sync_api.Error, MarkingError) as e:
+                err_msg = str(e)
+                # try to add robustness to async events (detached / deleted frames)
+                if retries_left > 0 and (
+                    "Frame was detached" in err_msg
+                    or "Frame with the given frameId is not found" in err_msg
+                    or "Execution context was destroyed" in err_msg
+                    or "Frame has been detached" in err_msg
+                    or "Cannot mark a child frame without a bid" in err_msg
+                    or "Cannot read properties of undefined" in err_msg
+                ):
+                    logger.warning(
+                        f"An error occurred while extracting the dom and axtree. Retrying ({retries_left}/{EXTRACT_OBS_MAX_TRIES} tries left).\n{repr(e)}"
+                    )
+                    # post-extract cleanup (ARIA attributes)
+                    _post_extract(self.page)
+                    time.sleep(0.5)
+                    continue
+                else:
+                    raise e
+            break
 
         # post-extraction cleanup of temporary info in dom
         _post_extract(self.page)
@@ -315,7 +344,7 @@ class OpenEndedWebsite(gym.Env):
         # obs is generic to all tasks
         obs = {
             "chat_messages": tuple(copy.deepcopy(self.chat.messages)),
-            "goal_object": None,
+            "goal_object": self.goal_object,
             # "goal_object": tuple(
             #     copy.deepcopy(self.goal_object)
             # ),  # new goal format, list of messages openai style
@@ -327,7 +356,7 @@ class OpenEndedWebsite(gym.Env):
             "dom_object": dom,
             "axtree_object": axtree,
             "extra_element_properties": extra_properties,
-            "last_action": None,
+            "last_action": self.last_action,
             "last_action_error": self.last_action_error,
         }
 
@@ -343,3 +372,9 @@ class OpenEndedWebsite(gym.Env):
             raise ValueError(f"Forbidden value: {reason} is not a string")
         self.chat.add_message(role="infeasible", msg=reason)
         self.infeasible_message_received = True
+
+    def send_task_complete(self, msg: str = "I'm done!"):
+        if not isinstance(msg, str):
+            raise ValueError(f"Forbidden value: {msg} is not a string")
+        self.chat.add_message(role="assistant", msg=msg)
+        self.terminated = True
