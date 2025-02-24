@@ -8,6 +8,7 @@ from .action import (
     ScrollLeftAction,
     ScrollRightAction,
     ScrollUpAction,
+    SelectOption,
     action_definitions,
 )
 from .functions import *
@@ -49,3 +50,5 @@ def apply_action(action: BaseModel, page=None):
         scroll_left(page=page)
     elif isinstance(action, ScrollRightAction):
         scroll_right(page=page)
+    elif isinstance(action, SelectOption):
+        select_option(bid=action.bid, options=action.options, page=page)

@@ -116,7 +116,7 @@ def uncheck(bid: str):
 
 
 # https://playwright.dev/docs/input#select-options
-def select_option(bid: str, options: str | list[str]):
+def select_option(bid: str, options: str | list[str], page: playwright.sync_api.Page):
     """
     Select one or multiple options in a <select> element. You can specify
     option value or label to select. Multiple options can be selected.
@@ -150,6 +150,7 @@ def click(
         click('48', button="middle", modifiers=["Shift"])
     """
     elem = get_elem_by_bid(page, bid, demo_mode != "off")
+
     add_demo_mode_effects(page, elem, bid, demo_mode=demo_mode, move_cursor=True)
 
     def do(force: bool):

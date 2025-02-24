@@ -85,6 +85,7 @@ class OpenEndedWebsite(gym.Env):
             ActionTypes.scroll_down,
             ActionTypes.scroll_left,
             ActionTypes.scroll_right,
+            ActionTypes.select_option,
         ]
 
         self.reset_variables()
@@ -122,6 +123,7 @@ class OpenEndedWebsite(gym.Env):
         self.infeasible_message_received = False
         self.chat: Chat = None
         self.goal_object = None
+        self.last_action_error = None
 
         # playwright
         self.browser: playwright.sync_api.Browser = None
@@ -159,7 +161,7 @@ class OpenEndedWebsite(gym.Env):
         if self.preprocess_func:
             self.preprocess_func(self.page, self.chat)
 
-        time.sleep(2)
+        time.sleep(5)
 
         self._wait_dom_loaded()
         self._active_page_check()
@@ -326,7 +328,7 @@ class OpenEndedWebsite(gym.Env):
             "axtree_object": axtree,
             "extra_element_properties": extra_properties,
             "last_action": None,
-            "last_action_error": None,
+            "last_action_error": self.last_action_error,
         }
 
         return obs

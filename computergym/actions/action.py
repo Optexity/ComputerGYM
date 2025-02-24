@@ -1,4 +1,5 @@
 from enum import Enum, unique
+from typing import Union
 
 from pydantic import BaseModel, Field
 
@@ -52,6 +53,18 @@ class ScrollRightAction(BaseModel):
     pass
 
 
+class SelectOption(BaseModel):
+    """
+    Select one or multiple options in a <select> element. You can specify
+    option value or label to select. Multiple options can be selected.
+    """
+
+    bid: str = Field(description="The id of the <select> element")
+    options: list[str] = Field(
+        description="Select single or multiple options. list of strings even for single option."
+    )
+
+
 @unique
 class ActionTypes(Enum):
     """
@@ -66,6 +79,7 @@ class ActionTypes(Enum):
     scroll_right = "scroll_right"
     input_text = "input_text"
     hover = "hover"
+    select_option = "select_option"
 
     # TAB ACTIONS
     tab_focus = "tab_focus"
@@ -85,6 +99,7 @@ action_definitions: dict[ActionTypes, BaseModel] = {
     ActionTypes.scroll_down: ScrollDownAction,
     ActionTypes.scroll_left: ScrollLeftAction,
     ActionTypes.scroll_right: ScrollRightAction,
+    ActionTypes.select_option: SelectOption,
 }
 
 action_examples: dict[ActionTypes, BaseModel] = {
@@ -94,4 +109,5 @@ action_examples: dict[ActionTypes, BaseModel] = {
     ActionTypes.scroll_down: ScrollDownAction(),
     ActionTypes.scroll_left: ScrollLeftAction(),
     ActionTypes.scroll_right: ScrollRightAction(),
+    ActionTypes.select_option: SelectOption(bid="c48", options=["red", "green"]),
 }
