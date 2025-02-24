@@ -9,20 +9,6 @@ from .envs import BrowserEnvTypes, EnvTypes
 from .obs_processors import ObsProcessorTypes
 
 
-def workarena_preprocess(page: playwright.sync_api.Page, chat: Chat):
-    page.fill("#user_name", "admin")
-    page.fill("#user_password", "wx%h/z5WWW0J")
-    page.click("#sysverb_login")
-
-    chat.add_message(
-        role="user",
-        msg="""
-            Go to the hardware store and order 2 "Standard Laptop" with configuration 
-            {'Additional software requirements': 'Slack, Trello, Zoom, Microsoft Office 365, Google Workspace', 'Adobe Acrobat': False, 'Adobe Photoshop': True}
-            """,
-    )
-
-
 def make_env(
     env_name: str,
     url: str,
@@ -30,7 +16,15 @@ def make_env(
     browser_env_type: BrowserEnvTypes,
     obs_processors: list[ObsProcessorTypes],
     cache_dir: str = None,
+    goal_message: str = None,
 ) -> gym.Env | OpenEndedWebsite:
+
+    def workarena_preprocess(page: playwright.sync_api.Page, chat: Chat):
+        page.fill("#user_name", "admin")
+        page.fill("#user_password", "wx%h/z5WWW0J")
+        page.click("#sysverb_login")
+
+        chat.add_message(role="user", msg=goal_message)
 
     if env_type == EnvTypes.browser:
         preprocess_func = None
