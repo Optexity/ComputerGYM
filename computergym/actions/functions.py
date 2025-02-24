@@ -57,7 +57,7 @@ def noop(wait_ms: float = 1000):
 
 
 # https://playwright.dev/docs/input#text-input
-def fill(bid: str, value: str):
+def fill(bid: str, value: str, page: playwright.sync_api.Page):
     """
     Fill out a form field. It focuses the element and triggers an input event with the entered text.
     It works for <input>, <textarea> and [contenteditable] elements.

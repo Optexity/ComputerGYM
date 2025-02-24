@@ -5,21 +5,11 @@ import os
 import re
 import time
 
-import browsergym.core
-import computergym.actions.functions as actions_module
 import gymnasium as gym
 import numpy as np
 import playwright.sync_api
 from computergym.actions import ActionTypes
-from computergym.actions.action import (
-    ActionTypes,
-    ClickAction,
-    InputText,
-    ScrollDownAction,
-    ScrollLeftAction,
-    ScrollRightAction,
-    ScrollUpAction,
-)
+from computergym.actions.action import ActionTypes
 from computergym.actions.action_utils import apply_action
 from computergym.actions.functions import *
 from computergym.chats.chat import Chat
@@ -35,6 +25,7 @@ from computergym.obs_processors.observations import (
     extract_screenshot,
 )
 from computergym.obs_processors.utils import format_obs
+from computergym.utils import save_screenshot, save_str_obs
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -51,25 +42,41 @@ class History:
         self.obs = obs
         self.action = action
 
+    def save_history(self, cache_dir: str):
+        if cache_dir:
+            cache_dir = os.path.join(cache_dir, f"step-{self.step_number}")
+            os.makedirs(cache_dir, exist_ok=True)
+
+        for processor, value in self.obs.items():
+            if processor == ObsProcessorTypes.html:
+                save_str_obs(value, cache_dir, f"html-{self.step_number}.txt")
+            elif processor == ObsProcessorTypes.axtree:
+                save_str_obs(value, cache_dir, f"axtree-{self.step_number}.txt")
+            elif processor == ObsProcessorTypes.screenshot:
+                save_screenshot(value, cache_dir, f"screenshot-{self.step_number}.png")
+            elif processor == ObsProcessorTypes.som:
+                save_screenshot(value, cache_dir, f"som-{self.step_number}.png")
+
+        string = self.action.model_dump()
+        string["action"] = self.action.__class__.__name__
+        string = json.dumps(string, indent=4)
+        save_str_obs(string, cache_dir, f"action-{self.step_number}.txt")
+
 
 class OpenEndedWebsite(gym.Env):
     def __init__(
-        self, url: str, obs_processors: list[ObsProcessorTypes], cache_dir: str = None
+        self,
+        url: str,
+        obs_processors: list[ObsProcessorTypes],
+        cache_dir: str = None,
+        preprocess_func: callable = None,
     ):
         self.url = url
         self.obs_processors = obs_processors
         self.cache_dir = cache_dir
+        self.preprocess_func = preprocess_func
         if self.cache_dir:
             os.makedirs(self.cache_dir, exist_ok=True)
-        self.history: list[History] = []
-        self.obs = None
-        self.action = None
-        self.terminated = False
-        self.truncated = False
-        self.info = {}
-        self.current_step = 0
-        self.chat: Chat = None
-        self.goal_object = None
 
         self.action_space = [
             ActionTypes.click,
@@ -80,83 +87,20 @@ class OpenEndedWebsite(gym.Env):
             ActionTypes.scroll_right,
         ]
 
-        ## TODO: remove this when we implement our own environment
-        self.env = gym.make(
-            "browsergym/openended",
-            task_kwargs={"start_url": url},  # starting URL
-            wait_for_user_message=True,  # wait for a user message after each agent message sent to the chat
-            headless=False,  # run the browser in headless mode
-        )
-
-        # playwright
-        self.browser: playwright.sync_api.Browser = None
-        self.context: playwright.sync_api.BrowserContext = None
-        self.page: playwright.sync_api.Page = None
-        self.page_history: dict = {}
-
-    def reset(self):
-        ## TODO: remove self.env when we implement our own environment
-        self.current_step = 0
-        obs, info = self.env.reset()
-        self.obs = format_obs(
-            obs, self.obs_processors, self.cache_dir, self.current_step
-        )
-        self.history = []
-        # import pdb
-
-        # pdb.set_trace()
-        return self.obs, info
-
-    def get_browser_gym_action(self, action: BaseModel):
-        ## TODO: this currently is to handle browsergym actions
-        if isinstance(action, ClickAction):
-
-            return f"""```click("{action.bid}")```"""
-        elif isinstance(action, InputText):
-
-            return f"""```fill("{action.bid}","{action.value}")```"""
-
-        elif isinstance(action, ScrollUpAction):
-            return f"""```scroll_up()```"""
-        elif isinstance(action, ScrollDownAction):
-            return f"""```scroll_down()```"""
-        elif isinstance(action, ScrollLeftAction):
-            return f"""```scroll_left()```"""
-        elif isinstance(action, ScrollRightAction):
-            return f"""```scroll_right()```"""
-
-        raise ValueError(
-            f"Invalid action type: {action}. Supported types are: {self.action_space}"
-        )
-
-    def step(self, action: BaseModel) -> tuple:
-        ## TODO: remove self.env when we implement our own environment
-        action = self.get_browser_gym_action(action)
-        print(action)
-        # history = History(self.current_step, self.obs, action_type, action_params)
-        # self.history.append(history)
-        import pdb
-
-        pdb.set_trace()
-
-        obs, reward, terminated, truncated, info = self.env.step(action)
-        self.obs = format_obs(
-            obs, self.obs_processors, self.cache_dir, self.current_step
-        )
-        self.current_step += 1
-        return self.obs, reward, terminated, truncated, info
-        self.obs = {}
-        self.main_observation = {}
-        for processor in self.obs_processors:
-            self.obs[processor] = self.obs_processors[processor](self.main_observation)
-        return self.obs
+        self.reset_variables()
 
     def render(self):
         pass
 
     def close(self):
-        ## TODO: remove this when we implement our own environment
-        self.env.close()
+        if self.chat:
+            self.chat.close()
+        if self.page:
+            self.page.close()
+        if self.context:
+            self.context.close()
+        if self.browser:
+            self.browser.close()
 
     def seed(self, seed=None):
         pass
@@ -166,6 +110,124 @@ class OpenEndedWebsite(gym.Env):
 
     def get_observation_space(self) -> list[ObsProcessorTypes]:
         pass
+
+    def reset_variables(self):
+        self.current_step = 0
+        self.history: list[History] = []
+        self.obs = None
+        self.action = None
+        self.terminated = False
+        self.truncated = False
+        self.info = {}
+        self.infeasible_message_received = False
+        self.chat: Chat = None
+        self.goal_object = None
+
+        # playwright
+        self.browser: playwright.sync_api.Browser = None
+        self.context: playwright.sync_api.BrowserContext = None
+        self.page: playwright.sync_api.Page = None
+        self.page_history: dict = {}
+
+    def reset(self):
+
+        self.reset_variables()
+        self.close()
+
+        pw: playwright.sync_api.Playwright = _get_global_playwright()
+        # important: change playwright's test id attribute from "data-testid" to "bid"
+        pw.selectors.set_test_id_attribute("bid")
+        self.browser = pw.chromium.launch(headless=False)
+        self.context = self.browser.new_context()
+        self.context.expose_binding(
+            "browsergym_page_activated",
+            lambda source: self._activate_page_from_js(source["page"]),
+        )
+
+        # create the chat
+        self.chat = Chat(headless=False, chat_size=(500, 800), record_video_dir=None)
+
+        self.page = self.context.new_page()
+        self.page.goto(self.url, timeout=10000)
+
+        # initialize the chat
+        self.chat.add_message(
+            role="assistant",
+            msg="Hi! I am your UI assistant, I can perform web tasks for you. What can I help you with?",
+        )
+
+        if self.preprocess_func:
+            self.preprocess_func(self.page, self.chat)
+
+        time.sleep(2)
+
+        self._wait_dom_loaded()
+        self._active_page_check()
+
+        self.infeasible_message_received = False
+
+        self._wait_for_user_message()
+
+        obs = self._get_obs()
+        self.obs = format_obs(obs, self.obs_processors)
+        self.info = {}
+
+        return self.obs, self.info
+
+    def step(self, action: BaseModel) -> tuple:
+        history = History(self.current_step, self.obs, action)
+        self.history.append(history)
+        history.save_history(self.cache_dir)
+
+        info = {}
+        info["action_exec_start"] = time.time()
+        info["action_exec_timeout"] = 0
+
+        # try to execute the action
+        logger.debug(f"Executing action")
+        try:
+            ## TODO: what is page
+            apply_action(action, self.page)
+
+            self.last_action_error = ""
+        except Exception as e:
+            print("action execution failed")
+            print(e)
+            self.last_action_error = f"{type(e).__name__}: {e}"
+            match = re.match(
+                "TimeoutError: Timeout ([0-9]+)ms exceeded.", self.last_action_error
+            )
+            if match:
+                info["action_exec_timeout"] = (
+                    float(match.groups()[0]) / 1000
+                )  # ms to sec
+
+        # wait a bit (for the JavaScript callback to set the active page)
+        time.sleep(0.5)  # wait for JS events to be fired (half a second)
+        self.context.cookies()  # trigger all waiting Playwright callbacks on the stack (hack, see https://playwright.dev/java/docs/multithreading)
+
+        # wait for the network to idle before extracting the observation, reward etc.
+        self._wait_dom_loaded()
+
+        # after the action is executed, the active page might have changed
+        # perform a safety check
+        self._active_page_check()
+        logger.debug(f"Active page checked")
+
+        # new step API wants a 5-tuple (gymnasium)
+        obs = self._get_obs()
+        self.obs = format_obs(obs, self.obs_processors)
+        reward = 0
+        done = (
+            self.chat.messages[-1]["role"] == "user"
+            and self.chat.messages[-1]["message"] == "exit"
+        )
+        terminated = done or (
+            self.infeasible_message_received
+        )  # task or agent can terminate the episode
+        truncated = False
+        self.current_step += 1
+        return self.obs, reward, terminated, truncated, info
 
     def _wait_dom_loaded(self):
         for page in self.context.pages:
@@ -270,133 +332,13 @@ class OpenEndedWebsite(gym.Env):
 
         return obs
 
-    def reset_(self):
-        self.current_step = 0
-        self.history = []
-        pw: playwright.sync_api.Playwright = _get_global_playwright()
-        # important: change playwright's test id attribute from "data-testid" to "bid"
-        pw.selectors.set_test_id_attribute("bid")
-        self.browser = pw.chromium.launch(headless=False)
-        self.context = self.browser.new_context()
-        self.context.expose_binding(
-            "browsergym_page_activated",
-            lambda source: self._activate_page_from_js(source["page"]),
-        )
+    def send_message_to_user(self, text: str):
+        if not isinstance(text, str):
+            raise ValueError(f"Forbidden value: {text} is not a string")
+        self.chat.add_message(role="assistant", msg=text)
 
-        # create the chat
-        self.chat = Chat(
-            headless=False,
-            chat_size=(500, 800),
-            record_video_dir=None,
-        )
-
-        self.page = self.context.new_page()
-        self.page.goto(self.url, timeout=10000)
-
-        self.page.fill("#user_name", "admin")
-        self.page.fill("#user_password", "wx%h/z5WWW0J")
-        self.page.click("#sysverb_login")
-        time.sleep(2)
-
-        # initialize the chat
-        self.chat.add_message(
-            role="assistant",
-            msg="Hi! I am your UI assistant, I can perform web tasks for you. What can I help you with?",
-        )
-
-        self._wait_dom_loaded()
-        self._active_page_check()
-
-        self.infeasible_message_received = False
-
-        self.chat.add_message(
-            role="user",
-            msg="""
-            Go to the hardware store and order 2 "Standard Laptop" with configuration 
-            {'Additional software requirements': 'Slack, Trello, Zoom, Microsoft Office 365, Google Workspace', 'Adobe Acrobat': False, 'Adobe Photoshop': True}
-            """,
-        )
-
-        self._wait_for_user_message()
-        obs = self._get_obs()
-        self.obs = format_obs(
-            obs, self.obs_processors, self.cache_dir, self.current_step
-        )
-        info = {}
-
-        # import pdb
-
-        # pdb.set_trace()
-
-        return self.obs, info
-
-    def step_(self, action: BaseModel) -> tuple:
-
-        history = History(self.current_step, self.obs, action)
-        self.history.append(history)
-        # action = self.get_browser_gym_action(action.action_type, action.action_params)
-        print(action)
-        # self.last_action = action
-
-        info = {}
-        info["action_exec_start"] = time.time()
-        info["action_exec_timeout"] = 0
-
-        def send_message_to_user(text: str):
-            if not isinstance(text, str):
-                raise ValueError(f"Forbidden value: {text} is not a string")
-            self.chat.add_message(role="assistant", msg=text)
-
-        def report_infeasible_instructions(reason: str):
-            if not isinstance(reason, str):
-                raise ValueError(f"Forbidden value: {reason} is not a string")
-            self.chat.add_message(role="infeasible", msg=reason)
-            self.infeasible_message_received = True
-
-        # try to execute the action
-        logger.debug(f"Executing action")
-        try:
-            ## TODO: what is page
-            apply_action(action, self.page)
-
-            self.last_action_error = ""
-        except Exception as e:
-            print("action execution failed")
-            print(e)
-            self.last_action_error = f"{type(e).__name__}: {e}"
-            match = re.match(
-                "TimeoutError: Timeout ([0-9]+)ms exceeded.", self.last_action_error
-            )
-            if match:
-                info["action_exec_timeout"] = (
-                    float(match.groups()[0]) / 1000
-                )  # ms to sec
-
-        # wait a bit (for the JavaScript callback to set the active page)
-        time.sleep(0.5)  # wait for JS events to be fired (half a second)
-        self.context.cookies()  # trigger all waiting Playwright callbacks on the stack (hack, see https://playwright.dev/java/docs/multithreading)
-
-        # wait for the network to idle before extracting the observation, reward etc.
-        self._wait_dom_loaded()
-
-        # after the action is executed, the active page might have changed
-        # perform a safety check
-        self._active_page_check()
-        logger.debug(f"Active page checked")
-
-        # new step API wants a 5-tuple (gymnasium)
-        obs = self._get_obs()
-        self.obs = format_obs(
-            obs, self.obs_processors, self.cache_dir, self.current_step
-        )
-        reward = 0
-        done = (
-            self.chat.messages[-1]["role"] == "user"
-            and self.chat.messages[-1]["message"] == "exit"
-        )
-        terminated = done or (
-            self.infeasible_message_received
-        )  # task or agent can terminate the episode
-        truncated = False
-        self.current_step += 1
-        return self.obs, reward, terminated, truncated, info
+    def report_infeasible_instructions(self, reason: str):
+        if not isinstance(reason, str):
+            raise ValueError(f"Forbidden value: {reason} is not a string")
+        self.chat.add_message(role="infeasible", msg=reason)
+        self.infeasible_message_received = True

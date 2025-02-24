@@ -1,1 +1,1 @@
-from .utils import save_screenshot
+from .utils import save_screenshot, save_str_obs

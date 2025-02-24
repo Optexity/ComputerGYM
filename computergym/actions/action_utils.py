@@ -36,7 +36,7 @@ def get_action_object(action_type: ActionTypes) -> BaseModel:
     return action_definitions[action_type]
 
 
-def apply_action(action: BaseModel, page=None) -> BaseModel:
+def apply_action(action: BaseModel, page=None):
     if isinstance(action, ClickAction):
         click(bid=action.bid, page=page)
     elif isinstance(action, InputText):

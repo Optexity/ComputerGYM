@@ -7,3 +7,8 @@ from .browser.openended_website import OpenEndedWebsite
 class EnvTypes(Enum):
     browser = "browser"
     computer = "computer"
+
+
+class BrowserEnvTypes(Enum):
+    openended = "openended"
+    workarena = "workarena"
