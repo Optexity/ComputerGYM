@@ -10,7 +10,6 @@ from .obs_processors import ObsProcessorTypes
 
 
 def make_env(
-    env_name: str,
     url: str,
     env_type: EnvTypes,
     browser_env_type: BrowserEnvTypes,
