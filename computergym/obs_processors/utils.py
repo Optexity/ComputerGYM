@@ -28,7 +28,9 @@ def format_obs(obs, obs_processors):
         if processor == ObsProcessorTypes.html:
             temp[processor] = html_processor(obs["dom_object"])
         elif processor == ObsProcessorTypes.axtree:
-            temp[processor] = axtree_processor(obs["axtree_object"])
+            temp[processor] = axtree_processor(
+                obs["axtree_object"], obs["extra_element_properties"]
+            )
         elif processor == ObsProcessorTypes.screenshot:
             temp[processor] = screenshot_processor(obs["screenshot"])
         elif processor == ObsProcessorTypes.som:
