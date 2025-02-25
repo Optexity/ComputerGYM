@@ -16,6 +16,7 @@ def make_env(
     obs_processors: list[ObsProcessorTypes],
     cache_dir: str = None,
     goal_message: str = None,
+    headless: bool = False,
 ) -> gym.Env | OpenEndedWebsite:
 
     def workarena_preprocess(page: playwright.sync_api.Page, chat: Chat):
@@ -34,6 +35,7 @@ def make_env(
             obs_processors,
             cache_dir=cache_dir,
             preprocess_func=preprocess_func,
+            headless=headless,
         )
     if env_type == EnvTypes.computer:
         pass
