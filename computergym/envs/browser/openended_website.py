@@ -65,7 +65,8 @@ class History:
         string = json.dumps(string, indent=4)
         save_str_obs(string, cache_dir, f"action-{self.step_number}.txt")
 
-        save_str_obs(self.error, cache_dir, f"error-{self.step_number}.txt")
+        if self.error:
+            save_str_obs(self.error, cache_dir, f"error-{self.step_number}.txt")
 
 
 class OpenEndedWebsite(gym.Env):
