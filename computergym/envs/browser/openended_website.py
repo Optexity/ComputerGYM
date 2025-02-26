@@ -38,10 +38,12 @@ class History:
         step_number: int,
         obs: dict,
         action: BaseModel,
+        error: str = None,
     ):
         self.step_number = step_number
         self.obs = obs
         self.action = action
+        self.error = error
 
     def save_history(self, cache_dir: str):
         if cache_dir:
@@ -62,6 +64,8 @@ class History:
         string["action"] = self.action.__class__.__name__
         string = json.dumps(string, indent=4)
         save_str_obs(string, cache_dir, f"action-{self.step_number}.txt")
+
+        save_str_obs(self.error, cache_dir, f"error-{self.step_number}.txt")
 
 
 class OpenEndedWebsite(gym.Env):
@@ -190,7 +194,6 @@ class OpenEndedWebsite(gym.Env):
     def step(self, action: BaseModel) -> tuple:
         history = History(self.current_step, self.obs, action)
         self.history.append(history)
-        history.save_history(self.cache_dir)
 
         info = {}
         info["action_exec_start"] = time.time()
@@ -212,6 +215,7 @@ class OpenEndedWebsite(gym.Env):
         except Exception as e:
             logging.exception(f"Error while executing action: {action}: {e}")
             self.last_action_error = f"{type(e).__name__}: {e}"
+            self.history[-1].error = self.last_action_error
             match = re.match(
                 "TimeoutError: Timeout ([0-9]+)ms exceeded.", self.last_action_error
             )
@@ -219,7 +223,7 @@ class OpenEndedWebsite(gym.Env):
                 info["action_exec_timeout"] = (
                     float(match.groups()[0]) / 1000
                 )  # ms to sec
-
+        history.save_history(self.cache_dir)
         # wait a bit (for the JavaScript callback to set the active page)
         time.sleep(0.5)  # wait for JS events to be fired (half a second)
         self.context.cookies()  # trigger all waiting Playwright callbacks on the stack (hack, see https://playwright.dev/java/docs/multithreading)
