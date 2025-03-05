@@ -9,7 +9,6 @@ description = "Simple enviorment for browser and computer agents"
 authors = [{ name = "Sankalp Garg", email = "authors@reinforcealignai.com" }]
 requires-python = ">=3.10"
 dependencies = [
-    "browsergym",
     "litellm",
     "matplotlib",
     "instructor",
