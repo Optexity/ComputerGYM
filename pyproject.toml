@@ -12,5 +12,7 @@ dependencies = [
     "browsergym",
     "litellm",
     "matplotlib",
-    "instructor"
+    "instructor",
+    "playwright==1.44.0",
+    "google-generativeai",
 ]
