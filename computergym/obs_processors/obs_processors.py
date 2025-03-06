@@ -8,3 +8,5 @@ class ObsProcessorTypes(Enum):
     screenshot = "screenshot"
     som = "som"
     omniparser = "omniparser"
+    last_action_error = "last_action_error"
+    goal = "goal"

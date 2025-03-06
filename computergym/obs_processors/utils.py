@@ -16,9 +16,9 @@ def format_obs(obs, obs_processors):
     temp = {
         "chat_messages": obs["chat_messages"],
         "screenshot": obs["screenshot"],
-        "goal_object": obs["goal_object"],
+        ObsProcessorTypes.goal: obs["goal_object"],
         "last_action": obs["last_action"],
-        "last_action_error": obs["last_action_error"],
+        ObsProcessorTypes.last_action_error: obs["last_action_error"],
         "open_pages_urls": obs["open_pages_urls"],
         "open_pages_titles": obs["open_pages_titles"],
         "active_page_index": obs["active_page_index"],
