@@ -1,5 +1,3 @@
-from typing import Any
-
 import gymnasium as gym
 import playwright.sync_api
 from computergym.chats.chat import Chat
