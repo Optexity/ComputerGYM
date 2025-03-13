@@ -77,12 +77,14 @@ class OpenEndedWebsite(gym.Env):
         cache_dir: str = None,
         preprocess_func: callable = None,
         headless: bool = False,
+        proxy: str = None,
     ):
         self.url = url
         self.obs_processors = obs_processors
         self.cache_dir = cache_dir
         self.preprocess_func = preprocess_func
         self.headless = headless
+        self.proxy = proxy
         if self.cache_dir:
             os.makedirs(self.cache_dir, exist_ok=True)
 
@@ -153,8 +155,12 @@ class OpenEndedWebsite(gym.Env):
         pw: playwright.sync_api.Playwright = _get_global_playwright()
         # important: change playwright's test id attribute from "data-testid" to "bid"
         pw.selectors.set_test_id_attribute("bid")
-        self.browser = pw.chromium.launch(headless=self.headless)
-        self.context = self.browser.new_context()
+        self.browser = pw.chromium.launch_persistent_context(
+            "./browser_data",
+            headless=self.headless,
+            proxy={"server": self.proxy} if self.proxy else None,
+        )
+        self.context = self.browser
         self.context.expose_binding(
             "browsergym_page_activated",
             lambda source: self._activate_page_from_js(source["page"]),
@@ -162,7 +168,10 @@ class OpenEndedWebsite(gym.Env):
 
         # create the chat
         self.chat = Chat(
-            headless=self.headless, chat_size=(500, 800), record_video_dir=None
+            headless=self.headless,
+            chat_size=(500, 800),
+            record_video_dir=None,
+            proxy=self.proxy,
         )
 
         self.page = self.context.new_page()

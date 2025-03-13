@@ -15,6 +15,7 @@ def make_env(
     cache_dir: str = None,
     goal_message: str = None,
     headless: bool = False,
+    proxy: str = None,
 ) -> gym.Env | OpenEndedWebsite:
 
     def workarena_preprocess(page: playwright.sync_api.Page, chat: Chat):
@@ -34,6 +35,7 @@ def make_env(
             cache_dir=cache_dir,
             preprocess_func=preprocess_func,
             headless=headless,
+            proxy=proxy,
         )
     if env_type == EnvTypes.computer:
         pass
