@@ -61,7 +61,6 @@ class OpenEndedWebsite(gym.Env):
     def __init__(
         self,
         url: str,
-        obs_processors: list[ObsProcessorTypes],
         goal: str,
         cache_dir: str = None,
         preprocess_func: callable = None,
@@ -69,7 +68,6 @@ class OpenEndedWebsite(gym.Env):
         proxy: str = None,
     ):
         self.url = url
-        self.obs_processors = obs_processors
         self.cache_dir = cache_dir
         self.preprocess_func = preprocess_func
         self.headless = headless
@@ -153,7 +151,8 @@ class OpenEndedWebsite(gym.Env):
         )
 
         self.page = self.context.new_page()
-        self.page.goto(self.url, timeout=10000)
+        if self.url:
+            self.page.goto(self.url, timeout=10000)
 
         if self.preprocess_func:
             self.preprocess_func(self.page)
@@ -164,7 +163,6 @@ class OpenEndedWebsite(gym.Env):
         self._active_page_check()
 
         self.obs = self.get_obs()
-
         self.info = {}
 
         return self.obs, self.info

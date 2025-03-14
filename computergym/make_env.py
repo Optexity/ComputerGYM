@@ -10,7 +10,6 @@ def make_env(
     url: str,
     env_type: EnvTypes,
     browser_env_type: BrowserEnvTypes,
-    obs_processors: list[ObsProcessorTypes],
     cache_dir: str = None,
     goal_message: str = None,
     headless: bool = False,
@@ -28,7 +27,6 @@ def make_env(
             preprocess_func = workarena_preprocess
         return OpenEndedWebsite(
             url,
-            obs_processors,
             goal_message,
             cache_dir=cache_dir,
             preprocess_func=preprocess_func,

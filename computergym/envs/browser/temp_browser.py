@@ -120,58 +120,28 @@ saved_html = """
 """
 
 
-import copy
-import json
-import logging
-import os
-import re
-import time
-
-import gymnasium as gym
-import numpy as np
-import playwright.sync_api
-from computergym.actions import ActionTypes
-from computergym.actions.action import ActionTypes
-from computergym.actions.action_utils import apply_action
-from computergym.actions.functions import *
-from computergym.chats.chat import Chat
-from computergym.obs_processors import ObsProcessorTypes
-from computergym.obs_processors.observations import (
-    MarkingError,
-    _post_extract,
-    _pre_extract,
-    extract_dom_extra_properties,
-    extract_dom_snapshot,
-    extract_merged_axtree,
-    extract_screenshot,
+from computergym import (
+    BrowserEnvTypes,
+    EnvTypes,
+    ObsProcessorTypes,
+    OpenEndedWebsite,
+    make_env,
 )
-from computergym.obs_processors.utils import format_obs
-from computergym.utils import save_screenshot, save_str_obs
-from pydantic import BaseModel
 
-pw: playwright.sync_api.Playwright = playwright.sync_api.sync_playwright().start()
-pw.selectors.set_test_id_attribute("bid")
-browser = pw.chromium.launch_persistent_context("./browser_data", headless=False)
+env: OpenEndedWebsite = make_env(
+    None,
+    EnvTypes.browser,
+    BrowserEnvTypes.openended,
+    cache_dir=None,
+    goal_message=None,
+    headless=True,
+)
+env.reset()
 
-context = browser
-# context.expose_binding(
-#     "browsergym_page_activated",
-#     lambda source: _activate_page_from_js(source["page"]),
-# )
-
-temp_page = context.new_page()
-
-temp_page.route("**/*", lambda route: route.abort())
-
-# Load the saved HTML content into the temporary page
-temp_page.set_content(saved_html, wait_until="domcontentloaded")
-element = temp_page.locator("xpath=//div[@id='root']/div/div/div/div/div/button").first
+env.page.route("**/*", lambda route: route.abort())
+env.page.set_content(saved_html, wait_until="domcontentloaded")
+env.get_obs()
+element = env.page.locator("xpath=//div[@id='root']/div/div/div/div/div/button").first
 print(element.text_content())
 print(element.get_attribute("bid"))
-# Apply _pre_extract to mark elements
-_pre_extract(temp_page)
-print(element.text_content())
-print(element.get_attribute("bid"))
-# Get the marked HTML content
-marked_html = temp_page.content()
-print(marked_html)
+print(env.page.content())
