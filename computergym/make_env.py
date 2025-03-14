@@ -1,6 +1,5 @@
 import gymnasium as gym
 import playwright.sync_api
-from computergym.chats.chat import Chat
 from computergym.envs.browser.openended_website import OpenEndedWebsite
 
 from .envs import BrowserEnvTypes, EnvTypes
@@ -18,12 +17,10 @@ def make_env(
     proxy: str = None,
 ) -> gym.Env | OpenEndedWebsite:
 
-    def workarena_preprocess(page: playwright.sync_api.Page, chat: Chat):
+    def workarena_preprocess(page: playwright.sync_api.Page):
         page.fill("#user_name", "admin")
         page.fill("#user_password", "wx%h/z5WWW0J")
         page.click("#sysverb_login")
-
-        chat.add_message(role="user", msg=goal_message)
 
     if env_type == EnvTypes.browser:
         preprocess_func = None
@@ -32,6 +29,7 @@ def make_env(
         return OpenEndedWebsite(
             url,
             obs_processors,
+            goal_message,
             cache_dir=cache_dir,
             preprocess_func=preprocess_func,
             headless=headless,

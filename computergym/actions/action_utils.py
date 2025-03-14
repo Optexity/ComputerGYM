@@ -42,13 +42,7 @@ def get_action_object(action_type: ActionTypes) -> BaseModel:
     return action_definitions[action_type]
 
 
-def apply_action(
-    action: BaseModel,
-    page: playwright.sync_api.Page = None,
-    send_message_to_user: callable = None,
-    report_infeasible_instructions: callable = None,
-    send_task_complete: callable = None,
-):
+def apply_action(action: BaseModel, page: playwright.sync_api.Page = None):
     if isinstance(action, ClickAction):
         click(bid=action.bid, page=page)
     elif isinstance(action, InputText):
@@ -72,4 +66,5 @@ def apply_action(
     elif isinstance(action, Noop):
         noop(wait_ms=action.wait_ms, page=page)
     elif isinstance(action, TaskComplete):
-        task_complete(msg=action.msg, send_task_complete=send_task_complete)
+        return True
+    return False

@@ -135,7 +135,6 @@ from computergym.actions.action import ActionTypes
 from computergym.actions.action_utils import apply_action
 from computergym.actions.functions import *
 from computergym.chats.chat import Chat
-from computergym.envs.browser import _get_global_playwright
 from computergym.obs_processors import ObsProcessorTypes
 from computergym.obs_processors.observations import (
     MarkingError,
@@ -150,7 +149,7 @@ from computergym.obs_processors.utils import format_obs
 from computergym.utils import save_screenshot, save_str_obs
 from pydantic import BaseModel
 
-pw: playwright.sync_api.Playwright = _get_global_playwright()
+pw: playwright.sync_api.Playwright = playwright.sync_api.sync_playwright().start()
 pw.selectors.set_test_id_attribute("bid")
 browser = pw.chromium.launch_persistent_context("./browser_data", headless=False)
 

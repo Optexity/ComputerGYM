@@ -1,42 +1,66 @@
 import logging
+import time
 
+import playwright.sync_api
 from computergym.obs_processors import (
     ObsProcessorTypes,
     axtree_processor,
     html_processor,
-    screenshot_processor,
     som_processor,
+)
+from computergym.obs_processors.observations import (
+    MarkingError,
+    _post_extract,
+    _pre_extract,
+    extract_dom_extra_properties,
+    extract_dom_snapshot,
+    extract_merged_axtree,
+    extract_screenshot,
 )
 
 logger = logging.getLogger(__name__)
+EXTRACT_OBS_MAX_TRIES = 5
 
 
-def format_obs(obs, obs_processors):
+def get_observation_from_page(page: playwright.sync_api.Page):
+    for retries_left in reversed(range(EXTRACT_OBS_MAX_TRIES)):
+        try:
+            # pre-extraction, mark dom elements (set bid, set dynamic attributes like value and checked)
+            _pre_extract(page)
+            dom = extract_dom_snapshot(page)
+            axtree = extract_merged_axtree(page)
+            extra_properties = extract_dom_extra_properties(dom)
+        except (playwright.sync_api.Error, MarkingError) as e:
+            err_msg = str(e)
+            # try to add robustness to async events (detached / deleted frames)
+            if retries_left > 0 and (
+                "Frame was detached" in err_msg
+                or "Frame with the given frameId is not found" in err_msg
+                or "Execution context was destroyed" in err_msg
+                or "Frame has been detached" in err_msg
+                or "Cannot mark a child frame without a bid" in err_msg
+                or "Cannot read properties of undefined" in err_msg
+            ):
+                logger.warning(
+                    f"An error occurred while extracting the dom and axtree. Retrying ({retries_left}/{EXTRACT_OBS_MAX_TRIES} tries left).\n{repr(e)}"
+                )
+                # post-extract cleanup (ARIA attributes)
+                _post_extract(page)
+                time.sleep(0.5)
+                continue
+            else:
+                raise e
+        break
 
-    temp = {
-        "chat_messages": obs["chat_messages"],
-        "screenshot": obs["screenshot"],
-        ObsProcessorTypes.goal: obs["goal_object"],
-        "last_action": obs["last_action"],
-        ObsProcessorTypes.last_action_error: obs["last_action_error"],
-        "open_pages_urls": obs["open_pages_urls"],
-        "open_pages_titles": obs["open_pages_titles"],
-        "active_page_index": obs["active_page_index"],
+    # post-extraction cleanup of temporary info in dom
+    _post_extract(page)
+
+    # obs is generic to all tasks
+    screenshot = extract_screenshot(page)
+    obs = {
+        ObsProcessorTypes.screenshot: screenshot,
+        ObsProcessorTypes.som: som_processor(screenshot, extra_properties),
+        ObsProcessorTypes.axtree: axtree_processor(axtree, extra_properties),
+        ObsProcessorTypes.html: html_processor(dom),
     }
-
-    for processor in obs_processors:
-        if processor == ObsProcessorTypes.html:
-            temp[processor] = html_processor(obs["dom_object"])
-        elif processor == ObsProcessorTypes.axtree:
-            temp[processor] = axtree_processor(
-                obs["axtree_object"], obs["extra_element_properties"]
-            )
-        elif processor == ObsProcessorTypes.screenshot:
-            temp[processor] = screenshot_processor(obs["screenshot"])
-        elif processor == ObsProcessorTypes.som:
-            temp[processor] = som_processor(
-                obs["screenshot"], obs["extra_element_properties"]
-            )
-        else:
-            logger.warning(f"ObsProcessor {processor} not implemented. Skipping.")
-    return temp
+    return obs

@@ -12,24 +12,12 @@ from computergym.actions import ActionTypes
 from computergym.actions.action import ActionTypes
 from computergym.actions.action_utils import apply_action
 from computergym.actions.functions import *
-from computergym.chats.chat import Chat
-from computergym.envs.browser import _get_global_playwright
 from computergym.obs_processors import ObsProcessorTypes
-from computergym.obs_processors.observations import (
-    MarkingError,
-    _post_extract,
-    _pre_extract,
-    extract_dom_extra_properties,
-    extract_dom_snapshot,
-    extract_merged_axtree,
-    extract_screenshot,
-)
-from computergym.obs_processors.utils import format_obs
+from computergym.obs_processors.utils import get_observation_from_page
 from computergym.utils import save_screenshot, save_str_obs
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
-EXTRACT_OBS_MAX_TRIES = 5
 
 
 class History:
@@ -74,6 +62,7 @@ class OpenEndedWebsite(gym.Env):
         self,
         url: str,
         obs_processors: list[ObsProcessorTypes],
+        goal: str,
         cache_dir: str = None,
         preprocess_func: callable = None,
         headless: bool = False,
@@ -85,6 +74,7 @@ class OpenEndedWebsite(gym.Env):
         self.preprocess_func = preprocess_func
         self.headless = headless
         self.proxy = proxy
+        self.goal_object = goal
         if self.cache_dir:
             os.makedirs(self.cache_dir, exist_ok=True)
 
@@ -109,8 +99,6 @@ class OpenEndedWebsite(gym.Env):
         pass
 
     def close(self):
-        if self.chat:
-            self.chat.close()
         if self.page:
             self.page.close()
         if self.context:
@@ -135,8 +123,6 @@ class OpenEndedWebsite(gym.Env):
         self.terminated = False
         self.truncated = False
         self.info = {}
-        self.infeasible_message_received = False
-        self.chat: Chat = None
         self.goal_object = None
         self.last_action = None
         self.last_action_error = None
@@ -152,7 +138,7 @@ class OpenEndedWebsite(gym.Env):
         self.reset_variables()
         self.close()
 
-        pw: playwright.sync_api.Playwright = _get_global_playwright()
+        pw = playwright.sync_api.sync_playwright().start()
         # important: change playwright's test id attribute from "data-testid" to "bid"
         pw.selectors.set_test_id_attribute("bid")
         self.browser = pw.chromium.launch_persistent_context(
@@ -166,37 +152,19 @@ class OpenEndedWebsite(gym.Env):
             lambda source: self._activate_page_from_js(source["page"]),
         )
 
-        # create the chat
-        self.chat = Chat(
-            headless=self.headless,
-            chat_size=(500, 800),
-            record_video_dir=None,
-            proxy=self.proxy,
-        )
-
         self.page = self.context.new_page()
         self.page.goto(self.url, timeout=10000)
 
-        # initialize the chat
-        self.chat.add_message(
-            role="assistant",
-            msg="Hi! I am your UI assistant, I can perform web tasks for you. What can I help you with?",
-        )
-
         if self.preprocess_func:
-            self.preprocess_func(self.page, self.chat)
+            self.preprocess_func(self.page)
 
         time.sleep(10)
 
         self._wait_dom_loaded()
         self._active_page_check()
 
-        self.infeasible_message_received = False
+        self.obs = self.get_obs()
 
-        self._wait_for_user_message()
-        self.goal_object = self.chat.messages[-1]["message"]
-        obs = self._get_obs()
-        self.obs = format_obs(obs, self.obs_processors)
         self.info = {}
 
         return self.obs, self.info
@@ -213,13 +181,7 @@ class OpenEndedWebsite(gym.Env):
         logger.debug(f"Executing action")
         try:
             self.last_action = action
-            apply_action(
-                action,
-                self.page,
-                send_message_to_user=self.send_message_to_user,
-                report_infeasible_instructions=self.report_infeasible_instructions,
-                send_task_complete=self.send_task_complete,
-            )
+            self.terminated = apply_action(action, self.page)
 
             self.last_action_error = ""
         except Exception as e:
@@ -247,19 +209,11 @@ class OpenEndedWebsite(gym.Env):
         logger.debug(f"Active page checked")
 
         # new step API wants a 5-tuple (gymnasium)
-        obs = self._get_obs()
-        self.obs = format_obs(obs, self.obs_processors)
+        self.obs = self.get_obs()
         reward = 0
-        done = (
-            self.chat.messages[-1]["role"] == "user"
-            and self.chat.messages[-1]["message"] == "exit"
-        )
-        terminated = done or (
-            self.infeasible_message_received or self.terminated
-        )  # task or agent can terminate the episode
         truncated = False
         self.current_step += 1
-        return self.obs, reward, terminated, truncated, info
+        return self.obs, reward, self.terminated, truncated, info
 
     def _wait_dom_loaded(self):
         for page in self.context.pages:
@@ -318,81 +272,23 @@ class OpenEndedWebsite(gym.Env):
                 f"Unexpected: active page has been closed ({self.page})."
             )
 
-    def _wait_for_user_message(self):
-        # if last message is from the assistant, wait for a user message to continue
-        if self.chat.messages[-1]["role"] == "assistant":
-            self.chat.wait_for_user_message()
-
-    def _get_obs(self):
-        for retries_left in reversed(range(EXTRACT_OBS_MAX_TRIES)):
-            try:
-                # pre-extraction, mark dom elements (set bid, set dynamic attributes like value and checked)
-                _pre_extract(
-                    self.page,
-                )
-
-                dom = extract_dom_snapshot(self.page)
-                axtree = extract_merged_axtree(self.page)
-                extra_properties = extract_dom_extra_properties(dom)
-            except (playwright.sync_api.Error, MarkingError) as e:
-                err_msg = str(e)
-                # try to add robustness to async events (detached / deleted frames)
-                if retries_left > 0 and (
-                    "Frame was detached" in err_msg
-                    or "Frame with the given frameId is not found" in err_msg
-                    or "Execution context was destroyed" in err_msg
-                    or "Frame has been detached" in err_msg
-                    or "Cannot mark a child frame without a bid" in err_msg
-                    or "Cannot read properties of undefined" in err_msg
-                ):
-                    logger.warning(
-                        f"An error occurred while extracting the dom and axtree. Retrying ({retries_left}/{EXTRACT_OBS_MAX_TRIES} tries left).\n{repr(e)}"
-                    )
-                    # post-extract cleanup (ARIA attributes)
-                    _post_extract(self.page)
-                    time.sleep(0.5)
-                    continue
-                else:
-                    raise e
-            break
-
-        # post-extraction cleanup of temporary info in dom
-        _post_extract(self.page)
-
-        # obs is generic to all tasks
+    def get_obs(self):
+        obs = get_observation_from_page(self.page)
         obs = {
-            "chat_messages": tuple(copy.deepcopy(self.chat.messages)),
-            "goal_object": self.goal_object,
-            # "goal_object": tuple(
-            #     copy.deepcopy(self.goal_object)
-            # ),  # new goal format, list of messages openai style
-            "open_pages_urls": tuple(page.url for page in self.context.pages),
-            "open_pages_titles": tuple(page.title() for page in self.context.pages),
-            "active_page_index": np.asarray([self.context.pages.index(self.page)]),
-            "url": self.page.url,  # redundant with "open_pages_urls" and "active_page_index"
-            "screenshot": extract_screenshot(self.page),
-            "dom_object": dom,
-            "axtree_object": axtree,
-            "extra_element_properties": extra_properties,
-            "last_action": self.last_action,
-            "last_action_error": self.last_action_error,
+            ObsProcessorTypes.goal: copy.deepcopy(self.goal_object),
+            ObsProcessorTypes.open_pages_urls: tuple(
+                page.url for page in self.context.pages
+            ),
+            ObsProcessorTypes.open_pages_titles: tuple(
+                page.title() for page in self.context.pages
+            ),
+            ObsProcessorTypes.active_page_index: np.asarray(
+                [self.context.pages.index(self.page)]
+            ),
+            ObsProcessorTypes.url: self.page.url,
+            ObsProcessorTypes.last_action: self.last_action,
+            ObsProcessorTypes.last_action_error: self.last_action_error,
         }
+        obs.update(get_observation_from_page(self.page))
 
         return obs
-
-    def send_message_to_user(self, text: str):
-        if not isinstance(text, str):
-            raise ValueError(f"Forbidden value: {text} is not a string")
-        self.chat.add_message(role="assistant", msg=text)
-
-    def report_infeasible_instructions(self, reason: str):
-        if not isinstance(reason, str):
-            raise ValueError(f"Forbidden value: {reason} is not a string")
-        self.chat.add_message(role="infeasible", msg=reason)
-        self.infeasible_message_received = True
-
-    def send_task_complete(self, msg: str = "I'm done!"):
-        if not isinstance(msg, str):
-            raise ValueError(f"Forbidden value: {msg} is not a string")
-        self.chat.add_message(role="assistant", msg=msg)
-        self.terminated = True
