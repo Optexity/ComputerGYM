@@ -6,12 +6,10 @@ import re
 import time
 
 import gymnasium as gym
-import numpy as np
 import playwright.sync_api
 from computergym.actions import ActionTypes
 from computergym.actions.action import ActionTypes
 from computergym.actions.action_utils import apply_action
-from computergym.actions.functions import *
 from computergym.obs_processors import Observation
 from computergym.obs_processors.utils import get_observation_from_page
 from computergym.utils import save_screenshot, save_str_obs
@@ -38,15 +36,15 @@ class History:
             cache_dir = os.path.join(cache_dir, f"step-{self.step_number}")
             os.makedirs(cache_dir, exist_ok=True)
 
-        if self.obs.html:
+        if self.obs.html is not None:
             save_str_obs(self.obs.html, cache_dir, f"html-{self.step_number}.txt")
-        if self.obs.axtree:
+        if self.obs.axtree is not None:
             save_str_obs(self.obs.axtree, cache_dir, f"axtree-{self.step_number}.txt")
-        if self.obs.screenshot:
+        if self.obs.screenshot is not None:
             save_screenshot(
                 self.obs.screenshot, cache_dir, f"screenshot-{self.step_number}.png"
             )
-        if self.obs.som:
+        if self.obs.som is not None:
             save_screenshot(self.obs.som, cache_dir, f"som-{self.step_number}.png")
 
         string = self.action.model_dump()
@@ -54,7 +52,7 @@ class History:
         string = json.dumps(string, indent=4)
         save_str_obs(string, cache_dir, f"action-{self.step_number}.txt")
 
-        if self.error:
+        if self.error is not None:
             save_str_obs(self.error, cache_dir, f"error-{self.step_number}.txt")
 
 
@@ -119,7 +117,6 @@ class OpenEndedWebsite(gym.Env):
         self.terminated = False
         self.truncated = False
         self.info = {}
-        self.goal_object = None
         self.last_action = None
         self.last_action_error = None
 
@@ -178,7 +175,6 @@ class OpenEndedWebsite(gym.Env):
         try:
             self.last_action = action
             self.terminated = apply_action(action, self.page)
-
             self.last_action_error = ""
         except Exception as e:
             logging.exception(f"Error while executing action: {action}: {e}")
@@ -188,9 +184,8 @@ class OpenEndedWebsite(gym.Env):
                 "TimeoutError: Timeout ([0-9]+)ms exceeded.", self.last_action_error
             )
             if match:
-                info["action_exec_timeout"] = (
-                    float(match.groups()[0]) / 1000
-                )  # ms to sec
+                # ms to sec
+                info["action_exec_timeout"] = float(match.groups()[0]) / 1000
         history.save_history(self.cache_dir)
         # wait a bit (for the JavaScript callback to set the active page)
         time.sleep(0.5)  # wait for JS events to be fired (half a second)
@@ -232,9 +227,8 @@ class OpenEndedWebsite(gym.Env):
 
         # add the activated page to the page history (or move it to last which is the most recent)
         if page in self.page_history:
-            self.page_history[page] = self.page_history.pop(
-                page
-            )  # move page to the end of dictionnary
+            # move page to the end of dictionnary
+            self.page_history[page] = self.page_history.pop(page)
         else:
             self.page_history[page] = None  # add page to the end of dictionnary
 
@@ -252,9 +246,8 @@ class OpenEndedWebsite(gym.Env):
             self.page.is_closed() or self.page not in self.context.pages
         ):
             self.page_history.pop(self.page)  # remove active page from history
-            self.page = list(self.page_history.keys())[
-                -1
-            ]  # set last active page as the active page (most recent)
+            # set last active page as the active page (most recent)
+            self.page = list(self.page_history.keys())[-1]
 
         # active page should share the same browser context with the environment
         if self.page not in self.context.pages:
