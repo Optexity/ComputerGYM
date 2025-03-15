@@ -7,4 +7,4 @@ from .actions import (
 )
 from .envs import BrowserEnvTypes, EnvTypes, OpenEndedWebsite
 from .make_env import make_env
-from .obs_processors import ObsProcessorTypes
+from .obs_processors import Observation, ObsProcessorTypes

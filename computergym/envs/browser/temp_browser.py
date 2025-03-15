@@ -120,13 +120,7 @@ saved_html = """
 """
 
 
-from computergym import (
-    BrowserEnvTypes,
-    EnvTypes,
-    ObsProcessorTypes,
-    OpenEndedWebsite,
-    make_env,
-)
+from computergym import BrowserEnvTypes, EnvTypes, OpenEndedWebsite, make_env
 
 env: OpenEndedWebsite = make_env(
     None,
@@ -144,4 +138,17 @@ env.get_obs()
 element = env.page.locator("xpath=//div[@id='root']/div/div/div/div/div/button").first
 print(element.text_content())
 print(element.get_attribute("bid"))
-print(env.page.content())
+# print(env.page.content())
+element = env.page.get_by_role("button", name="Get Started Free")
+print(element.text_content())
+print(element.get_attribute("bid"))
+# print(env.page.content())
+
+
+# page.goto("https://lawyersaathi.com/")
+# page.get_by_role("button", name="Get Started Free").click()
+# page.get_by_label("Remember me").check()
+# page.get_by_placeholder("Email Address").click()
+# page.get_by_placeholder("Email Address").fill("shivam.goyal@optexity.com")
+# page.get_by_placeholder("Email Address").press("Enter")
+# page.get_by_placeholder("Password").click()

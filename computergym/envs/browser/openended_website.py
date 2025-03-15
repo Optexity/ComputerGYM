@@ -12,7 +12,7 @@ from computergym.actions import ActionTypes
 from computergym.actions.action import ActionTypes
 from computergym.actions.action_utils import apply_action
 from computergym.actions.functions import *
-from computergym.obs_processors import ObsProcessorTypes
+from computergym.obs_processors import Observation
 from computergym.obs_processors.utils import get_observation_from_page
 from computergym.utils import save_screenshot, save_str_obs
 from pydantic import BaseModel
@@ -24,7 +24,7 @@ class History:
     def __init__(
         self,
         step_number: int,
-        obs: dict,
+        obs: Observation,
         action: BaseModel,
         error: str = None,
     ):
@@ -38,15 +38,16 @@ class History:
             cache_dir = os.path.join(cache_dir, f"step-{self.step_number}")
             os.makedirs(cache_dir, exist_ok=True)
 
-        for processor, value in self.obs.items():
-            if processor == ObsProcessorTypes.html:
-                save_str_obs(value, cache_dir, f"html-{self.step_number}.txt")
-            elif processor == ObsProcessorTypes.axtree:
-                save_str_obs(value, cache_dir, f"axtree-{self.step_number}.txt")
-            elif processor == ObsProcessorTypes.screenshot:
-                save_screenshot(value, cache_dir, f"screenshot-{self.step_number}.png")
-            elif processor == ObsProcessorTypes.som:
-                save_screenshot(value, cache_dir, f"som-{self.step_number}.png")
+        if self.obs.html:
+            save_str_obs(self.obs.html, cache_dir, f"html-{self.step_number}.txt")
+        if self.obs.axtree:
+            save_str_obs(self.obs.axtree, cache_dir, f"axtree-{self.step_number}.txt")
+        if self.obs.screenshot:
+            save_screenshot(
+                self.obs.screenshot, cache_dir, f"screenshot-{self.step_number}.png"
+            )
+        if self.obs.som:
+            save_screenshot(self.obs.som, cache_dir, f"som-{self.step_number}.png")
 
         string = self.action.model_dump()
         string["action"] = self.action.__class__.__name__
@@ -109,9 +110,6 @@ class OpenEndedWebsite(gym.Env):
 
     def get_action_space(self) -> list[ActionTypes]:
         return self.action_space
-
-    def get_observation_space(self) -> list[ObsProcessorTypes]:
-        pass
 
     def reset_variables(self):
         self.current_step = 0
@@ -271,22 +269,17 @@ class OpenEndedWebsite(gym.Env):
             )
 
     def get_obs(self):
-        obs = get_observation_from_page(self.page)
-        obs = {
-            ObsProcessorTypes.goal: copy.deepcopy(self.goal_object),
-            ObsProcessorTypes.open_pages_urls: tuple(
-                page.url for page in self.context.pages
-            ),
-            ObsProcessorTypes.open_pages_titles: tuple(
-                page.title() for page in self.context.pages
-            ),
-            ObsProcessorTypes.active_page_index: np.asarray(
-                [self.context.pages.index(self.page)]
-            ),
-            ObsProcessorTypes.url: self.page.url,
-            ObsProcessorTypes.last_action: self.last_action,
-            ObsProcessorTypes.last_action_error: self.last_action_error,
-        }
-        obs.update(get_observation_from_page(self.page))
+        obs = Observation(
+            goal=copy.deepcopy(self.goal_object),
+            open_pages_urls=[page.url for page in self.context.pages],
+            open_pages_titles=[page.title() for page in self.context.pages],
+            active_page_index=self.context.pages.index(self.page),
+            url=copy.deepcopy(self.page.url),
+            last_action=copy.deepcopy(self.last_action),
+            last_action_error=copy.deepcopy(self.last_action_error),
+            html=None,
+            axtree=None,
+        )
+        obs = get_observation_from_page(self.page, obs)
 
         return obs

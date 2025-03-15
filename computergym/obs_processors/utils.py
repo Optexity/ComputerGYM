@@ -3,7 +3,7 @@ import time
 
 import playwright.sync_api
 from computergym.obs_processors import (
-    ObsProcessorTypes,
+    Observation,
     axtree_processor,
     html_processor,
     som_processor,
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 EXTRACT_OBS_MAX_TRIES = 5
 
 
-def get_observation_from_page(page: playwright.sync_api.Page):
+def get_observation_from_page(page: playwright.sync_api.Page, obs: Observation):
     for retries_left in reversed(range(EXTRACT_OBS_MAX_TRIES)):
         try:
             # pre-extraction, mark dom elements (set bid, set dynamic attributes like value and checked)
@@ -55,12 +55,9 @@ def get_observation_from_page(page: playwright.sync_api.Page):
     # post-extraction cleanup of temporary info in dom
     _post_extract(page)
 
-    # obs is generic to all tasks
-    screenshot = extract_screenshot(page)
-    obs = {
-        ObsProcessorTypes.screenshot: screenshot,
-        ObsProcessorTypes.som: som_processor(screenshot, extra_properties),
-        ObsProcessorTypes.axtree: axtree_processor(axtree, extra_properties),
-        ObsProcessorTypes.html: html_processor(dom),
-    }
+    obs.screenshot = extract_screenshot(page)
+    obs.som = som_processor(obs.screenshot, extra_properties)
+    obs.axtree = axtree_processor(axtree, extra_properties)
+    obs.html = html_processor(dom)
+
     return obs
