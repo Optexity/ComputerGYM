@@ -3,7 +3,6 @@ import playwright.sync_api
 from computergym.envs.browser.openended_website import OpenEndedWebsite
 
 from .envs import BrowserEnvTypes, EnvTypes
-from .obs_processors import ObsProcessorTypes
 
 
 def make_env(

@@ -21,11 +21,11 @@ class Demonstration:
         obs: Observation = None,
     ):
 
-        self.raw_html = raw_html
-        self.xpath = xpath
-        self.action_type = action_type
-        self.action = action
-        self.obs = obs
+        self.raw_html: str = raw_html
+        self.xpath: str = xpath
+        self.action_type: ActionTypes = action_type
+        self.action: BaseModel = action
+        self.obs: Observation = obs
 
     @staticmethod
     def from_json(file_path: str) -> list["Demonstration"]:
