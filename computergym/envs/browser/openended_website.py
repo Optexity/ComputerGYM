@@ -139,7 +139,7 @@ class OpenEndedWebsite(gym.Env):
             headless=self.headless,
             proxy={"server": self.proxy} if self.proxy else None,
         )
-        self.context = self.browser
+        self.context = self.browser.new_context()
         self.context.expose_binding(
             "browsergym_page_activated",
             lambda source: self._activate_page_from_js(source["page"]),
@@ -162,7 +162,9 @@ class OpenEndedWebsite(gym.Env):
 
         return self.obs, self.info
 
-    def step(self, action: BaseModel) -> tuple:
+    def step(self, action: BaseModel, action_from_script) -> tuple:
+        action_from_script: str = "self.page.goto('https://www.google.com')"
+        action_from_script = """page.get_by_role("listitem").first.click()"""
         history = History(self.current_step, self.obs, action)
         self.history.append(history)
 
@@ -174,7 +176,14 @@ class OpenEndedWebsite(gym.Env):
         logger.debug(f"Executing action")
         try:
             self.last_action = action
-            self.terminated = apply_action(action, self.page)
+            if action:
+                self.terminated = apply_action(action, self.page)
+            else:
+                element = exec(f"self.{action_from_script.replace('.click()','')}")
+                bid = element.get_attribute("bid")
+                action = get_action("click", bid=bid)
+                exec(action_from_script)  # execute the action from the script
+                apply(action_from_script)
             self.last_action_error = ""
         except Exception as e:
             logging.exception(f"Error while executing action: {action}: {e}")

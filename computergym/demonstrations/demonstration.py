@@ -60,5 +60,6 @@ class Demonstration:
         self.obs = env.get_obs()
         if self.xpath:
             element = env.page.locator(f"xpath={self.xpath}").first
+            env.page.get_by_role()
             self.action.bid = element.get_attribute("bid")
         env.close()

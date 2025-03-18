@@ -5,6 +5,12 @@ from computergym.envs.browser.openended_website import OpenEndedWebsite
 from .envs import BrowserEnvTypes, EnvTypes
 
 
+def workarena_preprocess(page: playwright.sync_api.Page):
+    page.fill("#user_name", "admin")
+    page.fill("#user_password", "wx%h/z5WWW0J")
+    page.click("#sysverb_login")
+
+
 def make_env(
     url: str,
     env_type: EnvTypes,
@@ -14,11 +20,6 @@ def make_env(
     headless: bool = False,
     proxy: str = None,
 ) -> gym.Env | OpenEndedWebsite:
-
-    def workarena_preprocess(page: playwright.sync_api.Page):
-        page.fill("#user_name", "admin")
-        page.fill("#user_password", "wx%h/z5WWW0J")
-        page.click("#sysverb_login")
 
     if env_type == EnvTypes.browser:
         preprocess_func = None

@@ -38,7 +38,7 @@ def _pre_extract(
 
     # we can't run this loop in JS due to Same-Origin Policy
     # (can't access the content of an iframe from a another one)
-    def mark_frames_recursive(frame, frame_bid: str):
+    def mark_frames_recursive(frame: playwright.sync_api.Frame, frame_bid: str):
         assert frame_bid == "" or re.match(r"^[a-z][a-zA-Z]*$", frame_bid)
         logger.debug(f"Marking frame {repr(frame_bid)}")
 
