@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 
@@ -114,4 +115,7 @@ def from_yaml(yaml_file_path: str):
 
 
 if __name__ == "__main__":
-    demonstration = from_yaml("./dummy.yaml")
+    parser = argparse.ArgumentParser(description="Process YAML file.")
+    parser.add_argument("yaml_file_path", type=str)
+    args = parser.parse_args()
+    demonstration = from_yaml(args.yaml_file_path)
