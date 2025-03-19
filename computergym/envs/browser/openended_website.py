@@ -134,10 +134,8 @@ class OpenEndedWebsite(gym.Env):
         pw = playwright.sync_api.sync_playwright().start()
         # important: change playwright's test id attribute from "data-testid" to "bid"
         pw.selectors.set_test_id_attribute("bid")
-        self.browser = pw.chromium.launch_persistent_context(
-            "./browser_data",
-            headless=self.headless,
-            proxy={"server": self.proxy} if self.proxy else None,
+        self.browser = pw.chromium.launch(
+            headless=self.headless, proxy={"server": self.proxy} if self.proxy else None
         )
         self.context = self.browser.new_context()
         self.context.expose_binding(

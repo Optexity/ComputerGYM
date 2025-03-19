@@ -43,6 +43,8 @@ def _pre_extract(
         logger.debug(f"Marking frame {repr(frame_bid)}")
 
         # mark all DOM elements in the frame (it will use the parent frame element's bid as a prefix)
+        if frame.url.strip() == "":
+            return
         warning_msgs = frame.evaluate(
             js_frame_mark_elements,
             [frame_bid, BROWSERGYM_ID_ATTRIBUTE, tags_to_mark],
@@ -90,6 +92,8 @@ def _post_extract(page: playwright.sync_api.Page):
     # we can't run this loop in JS due to Same-Origin Policy
     # (can't access the content of an iframe from a another one)
     for frame in page.frames:
+        if frame.url.strip() == "":
+            continue
         try:
             if not frame == page.main_frame:
                 # deal with weird frames (pdf viewer in <embed>)
