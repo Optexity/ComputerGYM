@@ -1,0 +1,11 @@
+save_dir: "playright_recorder_output"
+generated_code: "generated_code.py"
+tasks:
+  - task_name: dummy_test
+    description: "random"
+    save_dir: "/Users/sankalp/repository/github/Reinforce-Align-AI/playwright/playwright_recorder_output"
+    generated_code: "generated_code.py"
+    url: "https://hubspot.com/"
+
+  # - task_name: show_me_settings
+  #   description: "Show me settings"
