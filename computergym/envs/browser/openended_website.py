@@ -135,7 +135,8 @@ class OpenEndedWebsite(gym.Env):
         # important: change playwright's test id attribute from "data-testid" to "bid"
         pw.selectors.set_test_id_attribute("bid")
         self.browser = pw.chromium.launch(
-            headless=self.headless, proxy={"server": self.proxy} if self.proxy else None
+            headless=self.headless,
+            proxy={"server": self.proxy} if self.proxy else None,
         )
         self.context = self.browser.new_context()
         self.context.expose_binding(
@@ -160,9 +161,7 @@ class OpenEndedWebsite(gym.Env):
 
         return self.obs, self.info
 
-    def step(self, action: BaseModel, action_from_script) -> tuple:
-        action_from_script: str = "self.page.goto('https://www.google.com')"
-        action_from_script = """page.get_by_role("listitem").first.click()"""
+    def step(self, action: BaseModel) -> tuple:
         history = History(self.current_step, self.obs, action)
         self.history.append(history)
 
@@ -174,14 +173,7 @@ class OpenEndedWebsite(gym.Env):
         logger.debug(f"Executing action")
         try:
             self.last_action = action
-            if action:
-                self.terminated = apply_action(action, self.page)
-            else:
-                element = exec(f"self.{action_from_script.replace('.click()','')}")
-                bid = element.get_attribute("bid")
-                action = get_action("click", bid=bid)
-                exec(action_from_script)  # execute the action from the script
-                apply(action_from_script)
+            self.terminated = apply_action(action, self.page)
             self.last_action_error = ""
         except Exception as e:
             logging.exception(f"Error while executing action: {action}: {e}")
