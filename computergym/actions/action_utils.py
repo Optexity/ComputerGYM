@@ -44,6 +44,23 @@ def get_action_object(action_type: ActionTypes) -> BaseModel:
     return action_definitions[action_type]
 
 
+def get_action_string(action: BaseModel):
+    string = action.model_dump()
+    string["action"] = action.__class__.__name__
+    string = json.dumps(string, indent=4)
+    return string
+
+
+def parse_action_string(string) -> BaseModel:
+    string: dict = json.loads(string)
+    action_class_string = string.pop("action")
+    for action_class in action_definitions.values():
+        if action_class_string == action_class.__name__:
+            break
+    action = action_class.model_validate(string)
+    return action
+
+
 def apply_action(action: BaseModel, page: playwright.sync_api.Page = None):
     if isinstance(action, ClickAction):
         click(bid=action.bid, page=page)
@@ -70,17 +87,3 @@ def apply_action(action: BaseModel, page: playwright.sync_api.Page = None):
     elif isinstance(action, TaskComplete):
         return True
     return False
-
-
-def get_action_string(action: BaseModel):
-    string = action.model_dump()
-    string["action"] = action.__class__.__name__
-    string = json.dumps(string, indent=4)
-    return string
-
-
-def parse_action_string(string) -> BaseModel:
-    string: dict = json.loads(string)
-    action_class = action_definitions.get(string.pop("action"))
-    action = action_class.model_validate(string)
-    return action

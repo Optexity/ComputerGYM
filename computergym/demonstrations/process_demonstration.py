@@ -6,6 +6,7 @@ import yaml
 from computergym import BrowserEnvTypes, EnvTypes, OpenEndedWebsite, make_env
 from computergym.actions import ActionTypes, ClickAction, InputText
 from computergym.envs.browser import History
+
 from playwright.sync_api import Locator
 
 SAVE_DIR = "save_dir"
@@ -31,10 +32,10 @@ def get_processed_data(
     output_dir: str,
 ) -> int:
     command = command.strip()
-    if "click" in command:
+    if ".click(" in command:
         action_type = ActionTypes.click
         command = command.removesuffix(".click()")
-    elif "fill" in command:
+    elif ".fill(" in command:
         action_type = ActionTypes.input_text
         command, fill_value = command.split('.fill("')
         fill_value = fill_value.removesuffix('")')
@@ -49,7 +50,10 @@ def get_processed_data(
 
     obs = env.get_obs()
     element: Locator = eval(f"env.{command}")
-    bid = element.get_attribute("bid")
+    try:
+        bid = element.get_attribute("bid")
+    except Exception as e:
+        breakpoint()
     if action_type == ActionTypes.click:
         action = ClickAction(bid=bid)
     elif action_type == ActionTypes.input_text:
@@ -117,6 +121,6 @@ def from_yaml(yaml_file_path: str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process YAML file.")
-    parser.add_argument("yaml_file_path", type=str)
+    parser.add_argument("--yaml", type=str)
     args = parser.parse_args()
-    demonstration = from_yaml(args.yaml_file_path)
+    demonstration = from_yaml(args.yaml)

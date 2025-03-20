@@ -6,13 +6,13 @@ import re
 import time
 
 import gymnasium as gym
-import playwright.sync_api
-from computergym.actions import ActionTypes, get_action_string, parse_action_string
+from computergym.actions import ActionTypes
 from computergym.actions.action_utils import apply_action
 from computergym.obs_processors import Observation
 from computergym.obs_processors.utils import get_observation_from_page
-from computergym.utils import read_file, save_screenshot, save_str_to_file
 from pydantic import BaseModel
+
+import playwright.sync_api
 
 from .history import History
 

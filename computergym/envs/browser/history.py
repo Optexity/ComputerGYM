@@ -46,10 +46,12 @@ class History:
     @staticmethod
     def read_history(cache_dir: str) -> list["History"]:
         history = []
-        all_steps = [a for a in os.listdir(cache_dir) if a.startswith("step-")]
-        for step_number in sorted(
-            all_steps, key=lambda x: int(x.removeprefix("step-"))
-        ):
+        all_steps = [
+            int(a.removeprefix("step-"))
+            for a in os.listdir(cache_dir)
+            if a.startswith("step-")
+        ]
+        for step_number in sorted(all_steps):
             step_dir = os.path.join(cache_dir, f"step-{step_number}")
             obs = Observation(
                 goal=None,
@@ -65,10 +67,6 @@ class History:
 
             string = read_file(os.path.join(step_dir, f"action-{step_number}.txt"))
             action = parse_action_string(string)
-            history.append(
-                History(
-                    step_number=int(step_number.split("-")[1]), obs=obs, action=action
-                )
-            )
+            history.append(History(step_number=step_number, obs=obs, action=action))
 
         return history
