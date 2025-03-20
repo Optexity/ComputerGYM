@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 def get_action_string(action: BaseModel):
     string = action.model_dump()
-    string["action"] = action.__class__.__name__
+    string["action"] = action.__name__
     string = json.dumps(string, indent=4)
     return string
 
