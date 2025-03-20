@@ -7,53 +7,16 @@ import time
 
 import gymnasium as gym
 import playwright.sync_api
-from computergym.actions import ActionTypes
-from computergym.actions.action import ActionTypes
+from computergym.actions import ActionTypes, get_action_string, parse_action_string
 from computergym.actions.action_utils import apply_action
 from computergym.obs_processors import Observation
 from computergym.obs_processors.utils import get_observation_from_page
-from computergym.utils import save_screenshot, save_str_obs
+from computergym.utils import read_file, save_screenshot, save_str_to_file
 from pydantic import BaseModel
 
+from .history import History
+
 logger = logging.getLogger(__name__)
-
-
-class History:
-    def __init__(
-        self,
-        step_number: int,
-        obs: Observation,
-        action: BaseModel,
-        error: str = None,
-    ):
-        self.step_number = step_number
-        self.obs = obs
-        self.action = action
-        self.error = error
-
-    def save_history(self, cache_dir: str):
-        if cache_dir:
-            cache_dir = os.path.join(cache_dir, f"step-{self.step_number}")
-            os.makedirs(cache_dir, exist_ok=True)
-
-        if self.obs.html is not None:
-            save_str_obs(self.obs.html, cache_dir, f"html-{self.step_number}.txt")
-        if self.obs.axtree is not None:
-            save_str_obs(self.obs.axtree, cache_dir, f"axtree-{self.step_number}.txt")
-        if self.obs.screenshot is not None:
-            save_screenshot(
-                self.obs.screenshot, cache_dir, f"screenshot-{self.step_number}.png"
-            )
-        if self.obs.som is not None:
-            save_screenshot(self.obs.som, cache_dir, f"som-{self.step_number}.png")
-
-        string = self.action.model_dump()
-        string["action"] = self.action.__class__.__name__
-        string = json.dumps(string, indent=4)
-        save_str_obs(string, cache_dir, f"action-{self.step_number}.txt")
-
-        if self.error is not None:
-            save_str_obs(self.error, cache_dir, f"error-{self.step_number}.txt")
 
 
 class OpenEndedWebsite(gym.Env):
@@ -71,7 +34,7 @@ class OpenEndedWebsite(gym.Env):
         self.preprocess_func = preprocess_func
         self.headless = headless
         self.proxy = proxy
-        self.goal_object = goal
+        self.goal = goal
         if self.cache_dir:
             os.makedirs(self.cache_dir, exist_ok=True)
 
@@ -262,7 +225,7 @@ class OpenEndedWebsite(gym.Env):
 
     def get_obs(self):
         obs = Observation(
-            goal=copy.deepcopy(self.goal_object),
+            goal=copy.deepcopy(self.goal),
             open_pages_urls=[page.url for page in self.context.pages],
             open_pages_titles=[page.title() for page in self.context.pages],
             active_page_index=self.context.pages.index(self.page),

@@ -1,3 +1,5 @@
+import json
+
 from pydantic import BaseModel
 
 from .action import (
@@ -68,3 +70,17 @@ def apply_action(action: BaseModel, page: playwright.sync_api.Page = None):
     elif isinstance(action, TaskComplete):
         return True
     return False
+
+
+def get_action_string(action: BaseModel):
+    string = action.model_dump()
+    string["action"] = action.__class__.__name__
+    string = json.dumps(string, indent=4)
+    return string
+
+
+def parse_action_string(string) -> BaseModel:
+    string: dict = json.loads(string)
+    action_class = action_definitions.get(string.pop("action"))
+    action = action_class.model_validate(string)
+    return action

@@ -5,7 +5,7 @@ import os
 import yaml
 from computergym import BrowserEnvTypes, EnvTypes, OpenEndedWebsite, make_env
 from computergym.actions import ActionTypes, ClickAction, InputText
-from computergym.envs.browser.openended_website import History
+from computergym.envs.browser import History
 from playwright.sync_api import Locator
 
 SAVE_DIR = "save_dir"
@@ -88,6 +88,8 @@ def get_single_demonstration(
             env, content_path, command, next_step, output_dir
         )
 
+    # TODO: add task complete
+
 
 def from_yaml(yaml_file_path: str):
 
@@ -106,7 +108,6 @@ def from_yaml(yaml_file_path: str):
 
     for task in data[TASKS]:
         task_name = task[TASK_NAME]
-        description = task[DESCRIPTION]
         record_dir = os.path.join(data[SAVE_DIR], task_name, data[RECORDER_DIR])
         output_dir = os.path.join(data[SAVE_DIR], task_name, data[PROCESSED_OUTPUT_DIR])
         code_file = os.path.join(data[SAVE_DIR], task_name, data[GENERATED_CODE])
