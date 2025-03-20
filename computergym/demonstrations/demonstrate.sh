@@ -1,8 +1,8 @@
 #!/bin/zsh
 
 # Check if yaml file exists
-if [ ! -f "dummy.yaml" ]; then
-    echo "Error: dummy.yaml not found"
+if [ ! -f "sankalp.yaml" ]; then
+    echo "Error: sankalp.yaml not found"
     exit 1
 fi
 
@@ -16,10 +16,10 @@ if ! command -v yq &> /dev/null; then
 fi
 
 # Read global variables from yaml
-SAVE_DIR=$(yq -r '.save_dir' dummy.yaml)
-GENERATED_CODE=$(yq -r '.generated_code' dummy.yaml)
-RECORDER_DIR=$(yq -r '.recorder_dir' dummy.yaml)
-PROCESSED_OUTPUT_DIR=$(yq -r '.processed_output_dir' dummy.yaml)
+SAVE_DIR=$(yq -r '.save_dir' sankalp.yaml)
+GENERATED_CODE=$(yq -r '.generated_code' sankalp.yaml)
+RECORDER_DIR=$(yq -r '.recorder_dir' sankalp.yaml)
+PROCESSED_OUTPUT_DIR=$(yq -r '.processed_output_dir' sankalp.yaml)
 
 mkdir -p "$SAVE_DIR"
 
@@ -27,10 +27,10 @@ mkdir -p "$SAVE_DIR"
 STORAGE_FILE="auth.json"
 
 # Process each task
-TASK_COUNT=$(yq -r '.tasks | length' dummy.yaml)
+TASK_COUNT=$(yq -r '.tasks | length' sankalp.yaml)
 for ((i=0; i<$TASK_COUNT; i++)); do
-    TASK_NAME=$(yq -r ".tasks[$i].task_name" dummy.yaml)
-    URL=$(yq -r ".tasks[$i].url" dummy.yaml)
+    TASK_NAME=$(yq -r ".tasks[$i].task_name" sankalp.yaml)
+    URL=$(yq -r ".tasks[$i].url" sankalp.yaml)
     
     # Create task-specific directory structure
     TASK_DIR="$SAVE_DIR/$TASK_NAME"
@@ -46,7 +46,7 @@ for ((i=0; i<$TASK_COUNT; i++)); do
     echo "Generating code to: $OUTPUT_FILE"
     
     # Execute playwright codegen command
-    npx --prefix /Users/shivamgoyal/work/Reinforce-Align-AI/playwright/ playwright codegen "$URL" \
+    npx --prefix $PLAYWRIGHT_PATH playwright codegen "$URL" \
         --output="$OUTPUT_FILE" \
         --content-dir="$TASK_DIR/$RECORDER_DIR" \
         --target=python
