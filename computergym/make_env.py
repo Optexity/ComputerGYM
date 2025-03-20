@@ -1,8 +1,8 @@
 import gymnasium as gym
-import playwright.sync_api
-from computergym.envs.browser.openended_website import OpenEndedWebsite
 
-from .envs import BrowserEnvTypes, EnvTypes
+import playwright.sync_api
+
+from .envs import BrowserEnvTypes, EnvTypes, OpenEndedWebsite
 
 
 def workarena_preprocess(page: playwright.sync_api.Page):

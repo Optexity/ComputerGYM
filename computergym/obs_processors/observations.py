@@ -7,6 +7,7 @@ from typing import Literal
 
 import numpy as np
 import PIL.Image
+
 import playwright.sync_api
 
 BROWSERGYM_ID_ATTRIBUTE = "bid"  # Playwright's default is "data-testid"
@@ -20,7 +21,6 @@ logger = logging.getLogger(__name__)
 
 
 class MarkingError(Exception):
-
     pass
 
 
