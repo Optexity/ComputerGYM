@@ -1,32 +1,58 @@
 #!/bin/zsh
 
-# Check if required arguments are provided
-if [ "$#" -lt 3 ]; then
-    echo "Usage: $0 <storage_file> <task_name> <url> [proxy_server]"
-    echo "Example: $0 auth.json aws_login us-east-1.console.aws.amazon.com"
+# Check if yaml file exists
+if [ ! -f "dummy.yaml" ]; then
+    echo "Error: dummy.yaml not found"
     exit 1
 fi
 
-# Get arguments
-STORAGE_FILE=$1
-TASK_NAME=$2
-URL=$3
-
-# Generate timestamp in yyyy-mm-dd-hh-mm-ss format
-TIMESTAMP=$(date +"%Y-%m-%d-%H-%M-%S")
-OUTPUT_FILE="${TASK_NAME}_${TIMESTAMP}.py"
-
-# Add proxy server if provided
-if [ -n "$PROXY_SERVER" ]; then
-    CMD="$CMD --proxy-server=\"$PROXY_SERVER\""
+# Install yq if not already installed
+if ! command -v yq &> /dev/null; then
+    echo "yq is not installed. Please install it first:"
+    echo "brew install yq  # for MacOS"
+    echo "or"
+    echo "wget https://github.com/mikefarah/yq/releases/download/v4.40.5/yq_linux_amd64 -O /usr/bin/yq && chmod +x /usr/bin/yq  # for Linux"
+    exit 1
 fi
 
-# Execute the command
-echo "Generating script for task: $TASK_NAME"
-echo "Using storage file: $STORAGE_FILE"
-echo "Target URL: $URL"
-echo "Generating code to to $OUTPUT_FILE"
+# Read global variables from yaml
+SAVE_DIR=$(yq -r '.save_dir' dummy.yaml)
+GENERATED_CODE=$(yq -r '.generated_code' dummy.yaml)
+RECORDER_DIR=$(yq -r '.recorder_dir' dummy.yaml)
+PROCESSED_OUTPUT_DIR=$(yq -r '.processed_output_dir' dummy.yaml)
 
-playwright codegen $URL --output=$OUTPUT_FILE --load-storage=$STORAGE_FILE --save-storage=$STORAGE_FILE --proxy-server="http://38.154.227.167:5868"
+mkdir -p "$SAVE_DIR"
 
-echo "Done! Generated code saved to $OUTPUT_FILE"
+# Storage file for playwright
+STORAGE_FILE="auth.json"
+
+# Process each task
+TASK_COUNT=$(yq -r '.tasks | length' dummy.yaml)
+for ((i=0; i<$TASK_COUNT; i++)); do
+    TASK_NAME=$(yq -r ".tasks[$i].task_name" dummy.yaml)
+    URL=$(yq -r ".tasks[$i].url" dummy.yaml)
+    
+    # Create task-specific directory structure
+    TASK_DIR="$SAVE_DIR/$TASK_NAME"
+    mkdir -p "$TASK_DIR"
+    mkdir -p "$TASK_DIR/$RECORDER_DIR"
+    mkdir -p "$TASK_DIR/$PROCESSED_OUTPUT_DIR"
+    
+    # Set output file path
+    OUTPUT_FILE="$TASK_DIR/$GENERATED_CODE"
+    
+    echo "Processing task: $TASK_NAME"
+    echo "Target URL: $URL"
+    echo "Generating code to: $OUTPUT_FILE"
+    
+    # Execute playwright codegen command
+    npx --prefix /Users/shivamgoyal/work/Reinforce-Align-AI/playwright/ playwright codegen "$URL" \
+        --output="$OUTPUT_FILE" \
+        --content-dir="$TASK_DIR/$RECORDER_DIR" \
+        --target=python
+    
+    echo "Done! Generated code saved to $OUTPUT_FILE"
+    echo "----------------------------------------"
+done
+
+echo "All tasks completed!"
