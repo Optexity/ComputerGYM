@@ -6,8 +6,7 @@ import time
 
 import gymnasium as gym
 from computergym.actions import ClickAction, InputText, TaskComplete, apply_action
-from computergym.obs_processors import Observation
-from computergym.obs_processors.utils import get_observation_from_page
+from computergym.obs_processors import Observation, get_observation_from_page
 from pydantic import BaseModel
 
 import playwright.sync_api

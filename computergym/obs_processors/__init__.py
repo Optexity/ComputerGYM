@@ -1,4 +1,2 @@
-from .axtree_processor import axtree_processor
-from .html_processor import html_processor
 from .obs_processors import Observation, ObsProcessorTypes
-from .som_processor import som_processor
+from .utils import get_observation_from_page

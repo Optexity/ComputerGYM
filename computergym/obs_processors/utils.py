@@ -2,13 +2,11 @@ import logging
 import time
 
 import playwright.sync_api
-from computergym.obs_processors import (
-    Observation,
-    axtree_processor,
-    html_processor,
-    som_processor,
-)
-from computergym.obs_processors.observations import (
+
+from .axtree_processor import axtree_processor
+from .html_processor import html_processor
+from .obs_processors import Observation
+from .observations import (
     MarkingError,
     _post_extract,
     _pre_extract,
@@ -17,6 +15,7 @@ from computergym.obs_processors.observations import (
     extract_merged_axtree,
     extract_screenshot,
 )
+from .som_processor import som_processor
 
 logger = logging.getLogger(__name__)
 EXTRACT_OBS_MAX_TRIES = 5
