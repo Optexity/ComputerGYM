@@ -6,7 +6,7 @@ import re
 import time
 
 import gymnasium as gym
-from computergym.actions import ActionTypes
+from computergym.actions.action import ClickAction, InputText, TaskComplete
 from computergym.actions.action_utils import apply_action
 from computergym.obs_processors import Observation
 from computergym.obs_processors.utils import get_observation_from_page
@@ -38,20 +38,7 @@ class OpenEndedWebsite(gym.Env):
         if self.cache_dir:
             os.makedirs(self.cache_dir, exist_ok=True)
 
-        self.action_space = [
-            ActionTypes.click,
-            ActionTypes.input_text,
-            ActionTypes.scroll_up,
-            ActionTypes.scroll_down,
-            ActionTypes.scroll_left,
-            ActionTypes.scroll_right,
-            ActionTypes.select_option,
-            ActionTypes.check,
-            ActionTypes.uncheck,
-            ActionTypes.hover,
-            ActionTypes.noop,
-            ActionTypes.task_complete,
-        ]
+        self.action_space: list[BaseModel] = [ClickAction, InputText, TaskComplete]
 
         self.reset_variables()
 
@@ -69,7 +56,7 @@ class OpenEndedWebsite(gym.Env):
     def seed(self, seed=None):
         pass
 
-    def get_action_space(self) -> list[ActionTypes]:
+    def get_action_space(self) -> list[BaseModel]:
         return self.action_space
 
     def reset_variables(self):

@@ -3,7 +3,6 @@ import json
 from pydantic import BaseModel
 
 from .action import (
-    ActionTypes,
     Check,
     ClickAction,
     Hover,
@@ -16,7 +15,7 @@ from .action import (
     SelectOption,
     TaskComplete,
     Uncheck,
-    action_definitions,
+    string_to_action_type,
 )
 from .functions import *
 
@@ -36,14 +35,6 @@ def custom_json_schema(action_function: type[BaseModel]) -> dict:
     }
 
 
-def get_action_signature(action_type: ActionTypes) -> dict:
-    return custom_json_schema(action_definitions[action_type])
-
-
-def get_action_object(action_type: ActionTypes) -> BaseModel:
-    return action_definitions[action_type]
-
-
 def get_action_string(action: BaseModel):
     string = action.model_dump()
     string["action"] = action.__class__.__name__
@@ -54,9 +45,7 @@ def get_action_string(action: BaseModel):
 def parse_action_string(string) -> BaseModel:
     string: dict = json.loads(string)
     action_class_string = string.pop("action")
-    for action_class in action_definitions.values():
-        if action_class_string == action_class.__name__:
-            break
+    action_class = string_to_action_type(action_class_string)
     action = action_class.model_validate(string)
     return action
 

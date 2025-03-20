@@ -4,7 +4,7 @@ import os
 
 import yaml
 from computergym import BrowserEnvTypes, EnvTypes, OpenEndedWebsite, make_env
-from computergym.actions import ActionTypes, ClickAction, InputText
+from computergym.actions import ClickAction, InputText
 from computergym.envs.browser import History
 
 from playwright.sync_api import Locator
@@ -33,10 +33,10 @@ def get_processed_data(
 ) -> int:
     command = command.strip()
     if ".click(" in command:
-        action_type = ActionTypes.click
+        action_type = ClickAction.__name__
         command = command.removesuffix(".click()")
     elif ".fill(" in command:
-        action_type = ActionTypes.input_text
+        action_type = InputText.__name__
         command, fill_value = command.split('.fill("')
         fill_value = fill_value.removesuffix('")')
     else:
@@ -54,9 +54,9 @@ def get_processed_data(
         bid = element.get_attribute("bid")
     except Exception as e:
         breakpoint()
-    if action_type == ActionTypes.click:
+    if action_type == ClickAction.__name__:
         action = ClickAction(bid=bid)
-    elif action_type == ActionTypes.input_text:
+    elif action_type == InputText.__name__:
         action = InputText(bid=bid, value=fill_value)
     history = History(step_number=next_step, obs=obs, action=action, error=None)
     history.save_history(output_dir)

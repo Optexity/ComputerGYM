@@ -110,65 +110,40 @@ class TaskComplete(BaseModel):
     )
 
 
-@unique
-class ActionTypes(Enum):
-    """
-    Adapted from browsergym/core/src/browsergym/core/action/highlevel.py
-    """
-
-    # INTERACTION ACTIONS
-    click = "click"
-    scroll_up = "scroll_up"
-    scroll_down = "scroll_down"
-    scroll_left = "scroll_left"
-    scroll_right = "scroll_right"
-    input_text = "input_text"
-    hover = "hover"
-    select_option = "select_option"
-    check = "check"
-    uncheck = "uncheck"
-    noop = "noop"
-
-    # TAB ACTIONS
-    tab_focus = "tab_focus"
-    tab_close = "tab_close"
-    new_tab = "new_tab"
-
-    # NAVIGATION ACTIONS
-    go_back = "go_back"
-    go_forward = "go_forward"
-    refresh = "refresh"
-
-    # TASK ACTIONS
-    task_complete = "task_complete"
+all_action_types = [
+    ClickAction,
+    InputText,
+    ScrollUpAction,
+    ScrollDownAction,
+    ScrollLeftAction,
+    ScrollRightAction,
+    SelectOption,
+    Check,
+    Uncheck,
+    Hover,
+    Noop,
+    TaskComplete,
+]
 
 
-action_definitions: dict[ActionTypes, BaseModel] = {
-    ActionTypes.click: ClickAction,
-    ActionTypes.input_text: InputText,
-    ActionTypes.scroll_up: ScrollUpAction,
-    ActionTypes.scroll_down: ScrollDownAction,
-    ActionTypes.scroll_left: ScrollLeftAction,
-    ActionTypes.scroll_right: ScrollRightAction,
-    ActionTypes.select_option: SelectOption,
-    ActionTypes.check: Check,
-    ActionTypes.uncheck: Uncheck,
-    ActionTypes.hover: Hover,
-    ActionTypes.noop: Noop,
-    ActionTypes.task_complete: TaskComplete,
-}
+def string_to_action_type(string: str) -> type[BaseModel]:
+    for action_type in all_action_types:
+        if string == action_type.__name__:
+            return action_type
+    raise ValueError(f"Unknown action type: {string}")
 
-action_examples: dict[ActionTypes, BaseModel] = {
-    ActionTypes.click: ClickAction(bid="12"),
-    ActionTypes.input_text: InputText(bid="12", value="Hello world!"),
-    ActionTypes.scroll_up: ScrollUpAction(),
-    ActionTypes.scroll_down: ScrollDownAction(),
-    ActionTypes.scroll_left: ScrollLeftAction(),
-    ActionTypes.scroll_right: ScrollRightAction(),
-    ActionTypes.select_option: SelectOption(bid="c48", options=["red", "green"]),
-    ActionTypes.check: Check(bid="12"),
-    ActionTypes.uncheck: Uncheck(bid="12"),
-    ActionTypes.hover: Hover(bid="12"),
-    ActionTypes.noop: Noop(wait_ms=1000),
-    ActionTypes.task_complete: TaskComplete(msg="Task completed successfully!"),
+
+action_examples: dict[str, BaseModel] = {
+    ClickAction.__name__: ClickAction(bid="12"),
+    InputText.__name__: InputText(bid="12", value="Hello world!"),
+    ScrollUpAction.__name__: ScrollUpAction(),
+    ScrollDownAction.__name__: ScrollDownAction(),
+    ScrollLeftAction.__name__: ScrollLeftAction(),
+    ScrollRightAction.__name__: ScrollRightAction(),
+    SelectOption.__name__: SelectOption(bid="c48", options=["red", "green"]),
+    Check.__name__: Check(bid="12"),
+    Uncheck.__name__: Uncheck(bid="12"),
+    Hover.__name__: Hover(bid="12"),
+    Noop.__name__: Noop(wait_ms=1000),
+    TaskComplete.__name__: TaskComplete(msg="Task completed successfully!"),
 }
