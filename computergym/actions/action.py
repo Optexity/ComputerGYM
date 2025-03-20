@@ -1,8 +1,6 @@
-import json
-from enum import Enum, unique
-from typing import Union
-
 from pydantic import BaseModel, Field
+
+from .functions import *
 
 
 class ClickAction(BaseModel):
@@ -125,13 +123,9 @@ all_action_types = [
     TaskComplete,
 ]
 
-
-def string_to_action_type(string: str) -> type[BaseModel]:
-    for action_type in all_action_types:
-        if string == action_type.__name__:
-            return action_type
-    raise ValueError(f"Unknown action type: {string}")
-
+string_to_action_type: dict[str, type[BaseModel]] = {
+    action_type.__name__: action_type for action_type in all_action_types
+}
 
 action_examples: dict[str, BaseModel] = {
     ClickAction.__name__: ClickAction(bid="12"),
@@ -147,3 +141,41 @@ action_examples: dict[str, BaseModel] = {
     Noop.__name__: Noop(wait_ms=1000),
     TaskComplete.__name__: TaskComplete(msg="Task completed successfully!"),
 }
+
+
+assert len(all_action_types) == len(
+    set([action_type.__name__ for action_type in all_action_types])
+), "Action types must have unique names"
+
+
+assert len(action_examples) == len(
+    all_action_types
+), "All action types must have examples"
+
+
+def apply_action(action: BaseModel, page: playwright.sync_api.Page = None):
+    if isinstance(action, ClickAction):
+        click(bid=action.bid, page=page)
+    elif isinstance(action, InputText):
+        fill(bid=action.bid, value=action.value, page=page)
+    elif isinstance(action, ScrollUpAction):
+        scroll_up(page=page)
+    elif isinstance(action, ScrollDownAction):
+        scroll_down(page=page)
+    elif isinstance(action, ScrollLeftAction):
+        scroll_left(page=page)
+    elif isinstance(action, ScrollRightAction):
+        scroll_right(page=page)
+    elif isinstance(action, SelectOption):
+        select_option(bid=action.bid, options=action.options, page=page)
+    elif isinstance(action, Check):
+        check(bid=action.bid, page=page)
+    elif isinstance(action, Uncheck):
+        uncheck(bid=action.bid, page=page)
+    elif isinstance(action, Hover):
+        hover(bid=action.bid, page=page)
+    elif isinstance(action, Noop):
+        noop(wait_ms=action.wait_ms, page=page)
+    elif isinstance(action, TaskComplete):
+        return True
+    return False

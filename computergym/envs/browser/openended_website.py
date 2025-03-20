@@ -1,13 +1,11 @@
 import copy
-import json
 import logging
 import os
 import re
 import time
 
 import gymnasium as gym
-from computergym.actions.action import ClickAction, InputText, TaskComplete
-from computergym.actions.action_utils import apply_action
+from computergym.actions import ClickAction, InputText, TaskComplete, apply_action
 from computergym.obs_processors import Observation
 from computergym.obs_processors.utils import get_observation_from_page
 from pydantic import BaseModel

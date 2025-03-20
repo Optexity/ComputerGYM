@@ -1,9 +1,25 @@
+import json
 import os
 
-from computergym.actions import get_action_string, parse_action_string
+from computergym.actions import string_to_action_type
 from computergym.obs_processors import Observation
 from computergym.utils import read_file, save_screenshot, save_str_to_file
 from pydantic import BaseModel
+
+
+def get_action_string(action: BaseModel):
+    string = action.model_dump()
+    string["action"] = action.__class__.__name__
+    string = json.dumps(string, indent=4)
+    return string
+
+
+def parse_action_string(string) -> BaseModel:
+    string: dict = json.loads(string)
+    action_class_string = string.pop("action")
+    action_class = string_to_action_type[action_class_string]
+    action = action_class.model_validate(string)
+    return action
 
 
 class History:
