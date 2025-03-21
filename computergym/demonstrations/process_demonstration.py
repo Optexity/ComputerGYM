@@ -6,6 +6,7 @@ import yaml
 from computergym import BrowserEnvTypes, EnvTypes, OpenEndedWebsite, make_env
 from computergym.actions import ClickAction, InputText, TaskComplete
 from computergym.envs.browser import History
+from tqdm import tqdm
 
 from playwright.sync_api import Locator
 
@@ -171,7 +172,7 @@ def from_yaml(yaml_file_path: str):
     )
     _, _ = env.reset()
 
-    for task in data[TASKS]:
+    for task in tqdm(data[TASKS]):
         task_name = task[TASK_NAME]
         record_dir = os.path.join(data[SAVE_DIR], task_name, data[RECORDER_DIR])
         output_dir = os.path.join(data[SAVE_DIR], task_name, data[PROCESSED_OUTPUT_DIR])
