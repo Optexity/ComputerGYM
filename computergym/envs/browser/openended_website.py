@@ -36,6 +36,7 @@ class OpenEndedWebsite(gym.Env):
             os.makedirs(self.cache_dir, exist_ok=True)
 
         self.action_space: list[BaseModel] = [ClickAction, InputText, TaskComplete]
+        self.pw = playwright.sync_api.sync_playwright().start()
 
         self.reset_variables()
 
@@ -78,14 +79,14 @@ class OpenEndedWebsite(gym.Env):
         self.reset_variables()
         self.close()
 
-        pw = playwright.sync_api.sync_playwright().start()
         # important: change playwright's test id attribute from "data-testid" to "bid"
-        pw.selectors.set_test_id_attribute("bid")
-        self.browser = pw.chromium.launch(
+        self.pw.selectors.set_test_id_attribute("bid")
+        self.browser = self.pw.chromium.launch_persistent_context(
+            user_data_dir="/Users/sankalp/repository/github/Reinforce-Align-AI/browser_data",
             headless=self.headless,
             proxy={"server": self.proxy} if self.proxy else None,
         )
-        self.context = self.browser.new_context()
+        self.context = self.browser
         self.context.expose_binding(
             "browsergym_page_activated",
             lambda source: self._activate_page_from_js(source["page"]),
