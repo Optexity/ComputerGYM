@@ -11,10 +11,6 @@ tasks:
     description: "show me all activity for deal sequoia"
     url: "https://app.hubspot.com/"
 
-  - task_name: change_close_date_deal_upekkha
-    description: "change close date for deal upekkha and set it to 2025-03-25"
-    url: "https://app.hubspot.com/"
-
   - task_name: mark_together_deal_as_signed
     description: "mark together AI deal as signed"
     url: "https://app.hubspot.com/"
@@ -33,6 +29,11 @@ tasks:
 
   - task_name: summarize_deal_plug_and_play
     description: "summarize deal plug and play"
+    url: "https://app.hubspot.com/"
+
+failed_cases:
+  - task_name: change_close_date_deal_upekkha
+    description: "change close date for deal upekkha and set it to 2025-03-25"
     url: "https://app.hubspot.com/"
 
   - task_name: filter_unassigned_deals
