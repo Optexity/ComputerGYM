@@ -32,7 +32,7 @@ PROCESSED_OUTPUT_DIR=$(yq -r '.processed_output_dir' "$YAML_FILE")
 mkdir -p "$SAVE_DIR"
 
 # Storage file for playwright
-STORAGE_FILE="auth.json"
+STORAGE_FILE="/Users/sankalp/repository/github/Reinforce-Align-AI/auth.json"
 
 # Process each task
 TASK_COUNT=$(yq -r '.tasks | length' "$YAML_FILE")
@@ -57,7 +57,8 @@ for ((i = 0; i < $TASK_COUNT; i++)); do
     npx --prefix $PLAYWRIGHT_PATH playwright codegen "$URL" \
         --output="$OUTPUT_FILE" \
         --content-dir="$TASK_DIR/$RECORDER_DIR" \
-        --target=python
+        --target=python \
+        --save-storage=$STORAGE_FILE --load-storage=$STORAGE_FILE
 
     echo "Done! Generated code saved to $OUTPUT_FILE"
     echo "----------------------------------------"
