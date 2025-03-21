@@ -34,7 +34,7 @@ def get_processed_data(
 ) -> int:
     command = command.strip()
     if recording_complete:
-        action = TaskComplete()
+        action_type = TaskComplete.__name__
     elif ".click(" in command:
         action_type = ClickAction.__name__
         command = command.removesuffix(".click()")
@@ -63,10 +63,58 @@ def get_processed_data(
         action = ClickAction(bid=bid)
     elif action_type == InputText.__name__:
         action = InputText(bid=bid, value=fill_value)
+    elif action_type == TaskComplete.__name__:
+        action = TaskComplete(msg="Task completed successfully!")
 
     history = History(step_number=next_step, obs=obs, action=action, error=None)
     history.save_history(output_dir)
     return next_step + 1
+
+
+def keep_only_last_recording_complete(processed_code_lines: list):
+    # Keep only last recording_complete and remove all previous ones
+    last_true_index = [i for i, a in enumerate(processed_code_lines) if a[-1]][-1]
+    processed_code_lines = processed_code_lines[: last_true_index + 1]
+    processed_code_lines = [a for a in processed_code_lines[:-1] if not a[-1]] + [
+        processed_code_lines[-1]
+    ]
+    return processed_code_lines
+
+
+def remove_simultaneous_click_fill(processed_code_lines: list):
+    new_data = []
+    for i, (command, _, _) in enumerate(processed_code_lines):
+        if "click(" in command and i < len(processed_code_lines) - 1:
+            command2 = processed_code_lines[i + 1][0]
+            if "fill(" in command2:
+                command = command.strip().removesuffix(".click()")
+                command2 = command2.strip().split(".fill(")[0]
+                if command != command2:
+                    new_data.append(processed_code_lines[i])
+            else:
+                new_data.append(processed_code_lines[i])
+        else:
+            new_data.append(processed_code_lines[i])
+
+    return new_data
+
+
+def remove_simultaneous_fills(processed_code_lines: list):
+    new_data = []
+    for i, (command, _, _) in enumerate(processed_code_lines):
+        if "fill(" in command and i < len(processed_code_lines) - 1:
+            command2 = processed_code_lines[i + 1][0]
+            if "fill(" in command2:
+                command = command.strip().split(".fill(")[0]
+                command2 = command2.strip().split(".fill(")[0]
+                if command != command2:
+                    new_data.append(processed_code_lines[i])
+            else:
+                new_data.append(processed_code_lines[i])
+        else:
+            new_data.append(processed_code_lines[i])
+
+    return new_data
 
 
 def get_single_demonstration(
@@ -86,27 +134,25 @@ def get_single_demonstration(
             str(code_comment["merge_with_previous"].lower()) == "true"
             and "page.goto" not in command
         ):
-            processed_code_lines[-1][0] = command
+            processed_code_lines[-1][0] = command.strip()
         else:
             processed_code_lines.append(
                 [
-                    command,
+                    command.strip(),
                     os.path.join(record_dir, f"{code_comment['uuid']}.html"),
                     str(code_comment["recording_complete"].lower()) == "true",
                 ]
             )
 
     next_step = 0
-    recording_complete_seen = False
+
+    processed_code_lines = keep_only_last_recording_complete(processed_code_lines)
+    processed_code_lines = remove_simultaneous_click_fill(processed_code_lines)
+    processed_code_lines = remove_simultaneous_fills(processed_code_lines)
+
     for command, content_path, recording_complete in processed_code_lines:
-        recording_complete_seen = recording_complete_seen or recording_complete
         next_step = get_processed_data(
-            env,
-            content_path,
-            command,
-            next_step,
-            output_dir,
-            recording_complete and not recording_complete_seen,
+            env, content_path, command, next_step, output_dir, recording_complete
         )
 
 
