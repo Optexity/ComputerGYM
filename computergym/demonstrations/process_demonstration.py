@@ -4,7 +4,7 @@ import os
 
 import yaml
 from computergym import BrowserEnvTypes, EnvTypes, OpenEndedWebsite, make_env
-from computergym.actions import ClickAction, InputText
+from computergym.actions import ClickAction, InputText, TaskComplete
 from computergym.envs.browser import History
 
 from playwright.sync_api import Locator
@@ -30,9 +30,12 @@ def get_processed_data(
     command: str,
     next_step: int,
     output_dir: str,
+    recording_complete: bool,
 ) -> int:
     command = command.strip()
-    if ".click(" in command:
+    if recording_complete:
+        action = TaskComplete()
+    elif ".click(" in command:
         action_type = ClickAction.__name__
         command = command.removesuffix(".click()")
     elif ".fill(" in command:
@@ -49,15 +52,18 @@ def get_processed_data(
     env.page.set_content(content, wait_until="domcontentloaded", timeout=10000)
 
     obs = env.get_obs()
-    element: Locator = eval(f"env.{command}")
-    try:
-        bid = element.get_attribute("bid")
-    except Exception as e:
-        breakpoint()
+    if not recording_complete:
+        element: Locator = eval(f"env.{command}")
+        try:
+            bid = element.get_attribute("bid")
+        except Exception as e:
+            breakpoint()
+
     if action_type == ClickAction.__name__:
         action = ClickAction(bid=bid)
     elif action_type == InputText.__name__:
         action = InputText(bid=bid, value=fill_value)
+
     history = History(step_number=next_step, obs=obs, action=action, error=None)
     history.save_history(output_dir)
     return next_step + 1
@@ -83,16 +89,25 @@ def get_single_demonstration(
             processed_code_lines[-1][0] = command
         else:
             processed_code_lines.append(
-                [command, os.path.join(record_dir, f"{code_comment['uuid']}.html")]
+                [
+                    command,
+                    os.path.join(record_dir, f"{code_comment['uuid']}.html"),
+                    str(code_comment["recording_complete"].lower()) == "true",
+                ]
             )
 
     next_step = 0
-    for command, content_path in processed_code_lines:
+    recording_complete_seen = False
+    for command, content_path, recording_complete in processed_code_lines:
+        recording_complete_seen = recording_complete_seen or recording_complete
         next_step = get_processed_data(
-            env, content_path, command, next_step, output_dir
+            env,
+            content_path,
+            command,
+            next_step,
+            output_dir,
+            recording_complete and not recording_complete_seen,
         )
-
-    # TODO: add task complete
 
 
 def from_yaml(yaml_file_path: str):
