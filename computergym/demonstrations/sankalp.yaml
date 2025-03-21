@@ -12,7 +12,7 @@ tasks:
     url: "https://app.hubspot.com/"
 
   - task_name: change_close_date_deal_upekkha
-    description: "change close date for deal upekkha"
+    description: "change close date for deal upekkha and set it to 2025-03-25"
     url: "https://app.hubspot.com/"
 
   - task_name: mark_together_deal_as_signed
@@ -35,8 +35,8 @@ tasks:
     description: "summarize deal plug and play"
     url: "https://app.hubspot.com/"
 
-  - task_name: filter_unsigned_deals
-    description: "filter unsigned deals"
+  - task_name: filter_unassigned_deals
+    description: "filter unassigned deals"
     url: "https://app.hubspot.com/"
 
   - task_name: filter_deals_close_date_this_week
