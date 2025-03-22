@@ -99,7 +99,7 @@ class OpenEndedWebsite(gym.Env):
         if self.preprocess_func:
             self.preprocess_func(self.page)
 
-        time.sleep(10)
+        time.sleep(5)
 
         self._wait_dom_loaded()
         self._active_page_check()
@@ -135,7 +135,7 @@ class OpenEndedWebsite(gym.Env):
                 info["action_exec_timeout"] = float(match.groups()[0]) / 1000
         history.save_history(self.cache_dir)
         # wait a bit (for the JavaScript callback to set the active page)
-        time.sleep(0.5)  # wait for JS events to be fired (half a second)
+        time.sleep(5)  # wait for JS events to be fired (half a second)
         self.context.cookies()  # trigger all waiting Playwright callbacks on the stack (hack, see https://playwright.dev/java/docs/multithreading)
 
         # wait for the network to idle before extracting the observation, reward etc.
