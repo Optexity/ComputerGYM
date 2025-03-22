@@ -95,7 +95,7 @@ class OpenEndedWebsite(gym.Env):
 
         self.page = self.context.new_page()
         if self.url:
-            self.page.goto(self.url, timeout=10000)
+            self.page.goto(self.url)
 
         if self.preprocess_func:
             self.preprocess_func(self.page)

@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import random
 
 import yaml
 from computergym import BrowserEnvTypes, EnvTypes, OpenEndedWebsite, make_env
@@ -157,10 +158,7 @@ def get_single_demonstration(
         )
 
 
-def from_yaml(yaml_file_path: str):
-
-    with open(yaml_file_path, "r") as file:
-        data = yaml.safe_load(file)
+def from_yaml(yaml_file_path: str, seed: int):
 
     env: OpenEndedWebsite = make_env(
         None,
@@ -172,10 +170,20 @@ def from_yaml(yaml_file_path: str):
     )
     _, _ = env.reset()
 
+    for _ in range(seed):
+        _ = env.get_obs()
+
+    with open(yaml_file_path, "r") as file:
+        data = yaml.safe_load(file)
+
+    random.seed(seed)
+    random.shuffle(data[TASKS])
     for task in tqdm(data[TASKS]):
         task_name = task[TASK_NAME]
         record_dir = os.path.join(data[SAVE_DIR], task_name, data[RECORDER_DIR])
-        output_dir = os.path.join(data[SAVE_DIR], task_name, data[PROCESSED_OUTPUT_DIR])
+        output_dir = os.path.join(
+            data[SAVE_DIR], task_name, data[PROCESSED_OUTPUT_DIR], f"seed-{seed}"
+        )
         code_file = os.path.join(data[SAVE_DIR], task_name, data[GENERATED_CODE])
         os.makedirs(output_dir, exist_ok=True)
         get_single_demonstration(env, record_dir, code_file, output_dir)
@@ -184,5 +192,6 @@ def from_yaml(yaml_file_path: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process YAML file.")
     parser.add_argument("--yaml", type=str)
+    parser.add_argument("--seed", type=int, default=0)
     args = parser.parse_args()
-    demonstration = from_yaml(args.yaml)
+    demonstration = from_yaml(args.yaml, args.seed)
