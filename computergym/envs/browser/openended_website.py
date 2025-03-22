@@ -81,12 +81,13 @@ class OpenEndedWebsite(gym.Env):
 
         # important: change playwright's test id attribute from "data-testid" to "bid"
         self.pw.selectors.set_test_id_attribute("bid")
-        self.browser = self.pw.chromium.launch_persistent_context(
-            user_data_dir="/Users/sankalp/repository/github/Reinforce-Align-AI/browser_data",
+        self.browser = self.pw.chromium.launch(
             headless=self.headless,
             proxy={"server": self.proxy} if self.proxy else None,
         )
-        self.context = self.browser
+        self.context = self.browser.new_context(
+            storage_state="/Users/sankalp/repository/github/Reinforce-Align-AI/auth.json"
+        )
         self.context.expose_binding(
             "browsergym_page_activated",
             lambda source: self._activate_page_from_js(source["page"]),
