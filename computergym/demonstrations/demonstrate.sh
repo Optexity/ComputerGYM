@@ -58,7 +58,7 @@ for ((i = 0; i < $TASK_COUNT; i++)); do
         --output="$OUTPUT_FILE" \
         --content-dir="$TASK_DIR/$RECORDER_DIR" \
         --target=python \
-        --save-storage=$STORAGE_FILE --load-storage=$STORAGE_FILE --viewport-size=1512,982
+        --save-storage=$STORAGE_FILE --load-storage=$STORAGE_FILE
 
     echo "Done! Generated code saved to $OUTPUT_FILE"
     echo "----------------------------------------"

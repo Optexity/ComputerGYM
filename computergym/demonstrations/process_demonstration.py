@@ -55,11 +55,15 @@ def get_processed_data(
 
     obs = env.get_obs()
     if not recording_complete:
-        element: Locator = eval(f"env.{command}")
         try:
+            element: Locator = eval(f"env.{command}")
             bid = element.get_attribute("bid")
-        except Exception as e:
-            breakpoint()
+        except Exception as e1:
+            try:
+                element: Locator = eval(f"env.{command}.nth(0)")
+                bid = element.get_attribute("bid")
+            except Exception as e2:
+                breakpoint()
 
     if action_type == ClickAction.__name__:
         action = ClickAction(bid=bid)
