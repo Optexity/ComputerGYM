@@ -17,11 +17,9 @@ conda activate optexity
 ```
 ### Installing dependencies
 ```bash
-cd ComputerGym
-pip install -e .
-cd ../AgentAI
-pip install -e .
-cd ../playwright
+pip install -e ComputerGym
+pip install -e AgentAI
+cd playwright
 git checkout playwright_optexity
 npm install
 npm run build
