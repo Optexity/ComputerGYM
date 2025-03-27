@@ -9,9 +9,6 @@
 <div align="center">
   <a href="https://www.youtube.com/watch?v=Nudl0JcezUg" target="_blank">
     <img src="https://img.youtube.com/vi/Nudl0JcezUg/maxresdefault.jpg" alt="Optexity Demo Video" width="800" height="450" style="border-radius:10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" />
-    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
-      <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/YouTube_Play_Button.svg" width="80" alt="Play Button"/>
-    </div>
   </a>
   <p>
     <strong>▶️ Optexity Demo: Trained Llama 3-8B Beats Gemini 2.0 Flash & GPT-4o on Software Automation</strong>
