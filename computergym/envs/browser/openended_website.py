@@ -86,7 +86,7 @@ class OpenEndedWebsite(gym.Env):
             proxy={"server": self.proxy} if self.proxy else None,
         )
         self.context = self.browser.new_context(
-            storage_state="/Users/sankalp/repository/github/Reinforce-Align-AI/auth.json"
+            storage_state="/Users/sankalp/repository/github/optexity/auth.json"
         )
         self.context.expose_binding(
             "browsergym_page_activated",

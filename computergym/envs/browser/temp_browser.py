@@ -1,7 +1,7 @@
 from computergym import BrowserEnvTypes, EnvTypes, OpenEndedWebsite, make_env
 
 # with open(
-#     "/Users/sankalp/repository/github/Reinforce-Align-AI/playwright/playwright_recorder_output/22x32m0ulva6dhtfluuz43.html",
+#     "/Users/sankalp/repository/github/optexity/playwright/playwright_recorder_output/22x32m0ulva6dhtfluuz43.html",
 #     "r",
 # ) as f:
 #     saved_html = f.read()

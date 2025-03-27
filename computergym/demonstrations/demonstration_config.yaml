@@ -1,0 +1,73 @@
+save_dir: "../cache_dir/recorded_demos"
+generated_code: "generated_code.py"
+recorder_dir: "recoded_html"
+processed_output_dir: "processed_data"
+
+tasks:
+  - task_name: filter_unassigned_deals
+    description: "filter unassigned deals"
+    url: "https://app.hubspot.com/"
+
+  - task_name: filter_deals_close_date_this_week
+    description: "filter deals with close date this week"
+    url: "https://app.hubspot.com/"
+
+  - task_name: filter_deals_close_date_this_month
+    description: "filter deals with close date this month"
+    url: "https://app.hubspot.com/"
+
+  - task_name: open_hubspot_deal_peak_xv_closed_bar
+    description: "Open Peak XV deal"
+    url: "https://app.hubspot.com/"
+
+  - task_name: show_activity_deal_sequoia_closed_bar
+    description: "show me all activity for deal sequoia"
+    url: "https://app.hubspot.com/"
+
+  - task_name: mark_together_deal_as_signed_closed_bar
+    description: "mark together AI deal as signed"
+    url: "https://app.hubspot.com/"
+
+  - task_name: create_task_for_deal_microsoft_closed_bar
+    description: "Create a task for the deal microsoft with title 'TO REVIEW' "
+    url: "https://app.hubspot.com/"
+
+  - task_name: show_all_task_for_deal_microsoft_closed_bar
+    description: "show all task for deal microsoft"
+    url: "https://app.hubspot.com/"
+
+  - task_name: change_deal_type_spc_closed_bar
+    description: "change deal type for deal South park commons to 'existing business'"
+    url: "https://app.hubspot.com/"
+
+  - task_name: summarize_deal_plug_and_play_closed_bar
+    description: "summarize deal plug and play. do not summarize it yourself and use inbuilt hubspot tools"
+    url: "https://app.hubspot.com/"
+
+  - task_name: open_hubspot_deal_peak_xv
+    description: "Open Peak XV deal"
+    url: "https://app.hubspot.com/"
+
+  - task_name: show_activity_deal_sequoia
+    description: "show me all activity for deal sequoia"
+    url: "https://app.hubspot.com/"
+
+  - task_name: mark_together_deal_as_signed
+    description: "mark together AI deal as signed"
+    url: "https://app.hubspot.com/"
+
+  - task_name: create_task_for_deal_microsoft
+    description: "Create a task for the deal microsoft with title 'TO REVIEW' "
+    url: "https://app.hubspot.com/"
+
+  - task_name: show_all_task_for_deal_microsoft
+    description: "show all task for deal microsoft"
+    url: "https://app.hubspot.com/"
+
+  - task_name: change_deal_type_spc
+    description: "change deal type for deal South park commons to new business"
+    url: "https://app.hubspot.com/"
+
+  - task_name: summarize_deal_plug_and_play
+    description: "summarize deal plug and play. do not summarize it yourself and use inbuilt hubspot tools"
+    url: "https://app.hubspot.com/"

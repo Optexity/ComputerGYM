@@ -32,7 +32,8 @@ PROCESSED_OUTPUT_DIR=$(yq -r '.processed_output_dir' "$YAML_FILE")
 mkdir -p "$SAVE_DIR"
 
 # Storage file for playwright
-STORAGE_FILE="/Users/sankalp/repository/github/Reinforce-Align-AI/auth.json"
+STORAGE_FILE="../cache_dir/auth.json"
+PLAYWRIGHT_PATH="../../../playwright/"
 
 # Process each task
 TASK_COUNT=$(yq -r '.tasks | length' "$YAML_FILE")
