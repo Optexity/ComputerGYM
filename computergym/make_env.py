@@ -1,3 +1,5 @@
+import os
+
 import gymnasium as gym
 
 import playwright.sync_api
@@ -6,8 +8,8 @@ from .envs import BrowserEnvTypes, EnvTypes, OpenEndedWebsite
 
 
 def workarena_preprocess(page: playwright.sync_api.Page):
-    page.fill("#user_name", "admin")
-    page.fill("#user_password", "wx%h/z5WWW0J")
+    page.fill("#user_name", os.environ["SNOW_INSTANCE_UNAME"])
+    page.fill("#user_password", os.environ["SNOW_INSTANCE_PWD"])
     page.click("#sysverb_login")
 
 
