@@ -1,4 +1,4 @@
-save_dir: "../cache_dir/recorded_demos"
+save_dir: "cache_dir/recorded_demos"
 generated_code: "generated_code.py"
 recorder_dir: "recoded_html"
 processed_output_dir: "processed_data"

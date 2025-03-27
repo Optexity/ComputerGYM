@@ -39,22 +39,20 @@ playwright install
 ### 1. Recording Demonstrations
 Record human demonstrations by creating a configuration file and running the demonstration script:
 ```bash
-cd ComputerGYM/computergym/demonstrations
-./demonstrate.sh demonstration_config.yaml
+./ComputerGYM/computergym/demonstrations/demonstrate.sh ComputerGYM/computergym/demonstrations/demonstration_config.yaml
 ```
 > Note: Create your own `demonstration_config.yaml` configuration file before running this script.
 
 ### 2. Processing Demonstrations
 Process the recorded demonstrations to prepare them for training:
 ```bash
-python process_demonstration.py --yaml demonstration_config.yaml --seed 5
+python ComputerGYM/computergym/demonstrations/process_demonstration.py --yaml ComputerGYM/computergym/demonstrations/demonstration_config.yaml --seed 5
 ```
 
 ### 3. Generating Training Data
 Convert processed demonstrations into a format suitable for model training:
 ```bash
-cd AgentAI/agentai/sft
-python prepare_training_data.py --agent_config ../train_configs/hubspot_agent.yaml
+python AgentAI/agentai/sft/prepare_training_data.py --agent_config AgentAI/agentai/train_configs/hubspot_agent.yaml
 ```
 
 ### 4. Training the Model
