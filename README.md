@@ -6,6 +6,10 @@
   <a href="https://optexity.com">Visit our website: optexity.com</a>
 </p>
 
+<p align="center">
+  <iframe width="800" height="450" src="https://www.youtube.com/embed/Nudl0JcezUg?autoplay=1" title="Optexity Demo | Optexity Trained Llama 3-8B Beats Gemini 2.0 Flash &amp; GPT-4o on Software Automation" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+</p>
+
 # Optexity: Foundation Model Training Using Human Demonstrations
 
 ## Overview
