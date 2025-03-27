@@ -6,9 +6,17 @@
   <a href="https://optexity.com">Visit our website: optexity.com</a>
 </p>
 
-<p align="center">
-  <iframe width="800" height="450" src="https://www.youtube.com/embed/Nudl0JcezUg?autoplay=1" title="Optexity Demo | Optexity Trained Llama 3-8B Beats Gemini 2.0 Flash &amp; GPT-4o on Software Automation" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-</p>
+<div align="center">
+  <a href="https://www.youtube.com/watch?v=Nudl0JcezUg" target="_blank">
+    <img src="https://img.youtube.com/vi/Nudl0JcezUg/maxresdefault.jpg" alt="Optexity Demo Video" width="800" height="450" style="border-radius:10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" />
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/YouTube_Play_Button.svg" width="80" alt="Play Button"/>
+    </div>
+  </a>
+  <p>
+    <strong>▶️ Optexity Demo: Trained Llama 3-8B Beats Gemini 2.0 Flash & GPT-4o on Software Automation</strong>
+  </p>
+</div>
 
 # Optexity: Foundation Model Training Using Human Demonstrations
 
