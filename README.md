@@ -16,7 +16,7 @@
     </div>
   </a>
   <p>
-    <strong>▶️ Optexity Demo: Trained Llama 3-8B Beats Gemini 2.0 Flash & GPT-4o on Software Automation</strong>
+    <strong>▶️ Click the image above to watch Optexity demo: Trained Llama 3-8B Beats Gemini 2.0 Flash & GPT-4o on Software Automation</strong>
   </p>
 </div>
 
