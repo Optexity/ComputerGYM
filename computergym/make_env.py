@@ -19,6 +19,7 @@ def make_env(
     goal_message: str = None,
     headless: bool = False,
     proxy: str = None,
+    storage_state: str = None,
 ) -> gym.Env | OpenEndedWebsite:
 
     if env_type == EnvTypes.browser:
@@ -32,6 +33,7 @@ def make_env(
             preprocess_func=preprocess_func,
             headless=headless,
             proxy=proxy,
+            storage_state=storage_state,
         )
     if env_type == EnvTypes.computer:
         pass

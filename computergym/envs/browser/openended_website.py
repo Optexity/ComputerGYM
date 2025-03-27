@@ -25,6 +25,7 @@ class OpenEndedWebsite(gym.Env):
         preprocess_func: callable = None,
         headless: bool = False,
         proxy: str = None,
+        storage_state: str = None,
     ):
         self.url = url
         self.cache_dir = cache_dir
@@ -32,6 +33,7 @@ class OpenEndedWebsite(gym.Env):
         self.headless = headless
         self.proxy = proxy
         self.goal = goal
+        self.storage_state = storage_state
         if self.cache_dir:
             os.makedirs(self.cache_dir, exist_ok=True)
 
@@ -85,9 +87,7 @@ class OpenEndedWebsite(gym.Env):
             headless=self.headless,
             proxy={"server": self.proxy} if self.proxy else None,
         )
-        self.context = self.browser.new_context(
-            storage_state="/Users/sankalp/repository/github/optexity/auth.json"
-        )
+        self.context = self.browser.new_context(storage_state=self.storage_state)
         self.context.expose_binding(
             "browsergym_page_activated",
             lambda source: self._activate_page_from_js(source["page"]),
