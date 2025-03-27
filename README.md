@@ -84,9 +84,29 @@ Optexity enables training foundation models using human demonstrations of comput
    ```
 
 ## Documentation
-For comprehensive information on configuration options and advanced usage patterns, please refer to the documentation available in each repository.
+For comprehensive information on configuration options and advanced usage patterns, please refer to the detailed documentation available in each repository:
+
+- **ComputerGYM**: Environment setup, demonstration recording, and processing
+- **AgentAI**: Model training configurations, inference settings, and evaluation metrics
+- **Playwright Integration**: Custom extensions and modifications for web automation
+
+### Configuration References
+- Demonstration configuration: See `ComputerGYM/computergym/demonstrations/demonstration_config_example.yaml`
+- Training parameters: See `AgentAI/agentai/train_configs/README.md`
 
 ## Acknowledgements
 This project builds upon and extends the work of:
-- [BrowserGym](https://github.com/ServiceNow/BrowserGym)
-- [Playwright](https://playwright.dev/)
+- [BrowserGym](https://github.com/ServiceNow/BrowserGym) - For the browser automation environment foundation
+- [Playwright](https://playwright.dev/) - For reliable web testing and automation capabilities
+- [LLaMA-Factory](https://github.com/hiyouga/LLaMA-Factory) - For efficient foundation model fine-tuning
+
+## Detailed Tutorial Videos
+Explore our step-by-step video guides to get started with Optexity:
+
+1. [**Optexity Tutorial Part 1 | Introduction and State of Browser Agents for Software Use**](https://www.youtube.com/watch?v=5gsb4z5FAAE)
+2. [**Optexity Tutorial Part 2 | Training AI with Human Demonstrations**](https://www.youtube.com/watch?v=CMreOrcN7bc)
+3. [**Optexity Tutorial Part 3 | AI Agent in Action!**](https://www.youtube.com/watch?v=0eq9rY2Su5E)
+
+## Community & Support
+- Report issues on [GitHub](https://github.com/Optexity/ComputerGYM/issues)
+- Follow us on [Twitter](https://twitter.com/optexity) for the latest updates
