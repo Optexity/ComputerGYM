@@ -8,7 +8,12 @@
 
 <div align="center">
   <a href="https://www.youtube.com/watch?v=Nudl0JcezUg" target="_blank">
-    <img src="https://img.youtube.com/vi/Nudl0JcezUg/maxresdefault.jpg" alt="Optexity Demo Video" width="800" height="450" style="border-radius:10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" />
+    <div style="position: relative; display: inline-block;">
+      <img src="https://img.youtube.com/vi/Nudl0JcezUg/maxresdefault.jpg" alt="Optexity Demo Video" width="800" height="450" style="border-radius:10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" />
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(0, 0, 255, 0.8); border-radius: 50%; width: 80px; height: 80px; display: flex; justify-content: center; align-items: center;">
+        <div style="width: 0; height: 0; border-top: 20px solid transparent; border-left: 35px solid white; border-bottom: 20px solid transparent; margin-left: 8px;"></div>
+      </div>
+    </div>
   </a>
   <p>
     <strong>▶️ Optexity Demo: Trained Llama 3-8B Beats Gemini 2.0 Flash & GPT-4o on Software Automation</strong>
@@ -19,6 +24,13 @@
 
 ## Overview
 Optexity enables training foundation models using human demonstrations of computer tasks. This framework allows for recording, processing, and using demonstrations to train AI agents to complete web-based tasks. We will be adding training using self exploration using reinforement learning, training from software documentations and training using youtube videos in future.
+
+## Detailed Tutorial Videos
+Explore our step-by-step video guides to get started with Optexity:
+
+1. [**Optexity Tutorial Part 1 | Introduction and State of Browser Agents for Software Use**](https://www.youtube.com/watch?v=5gsb4z5FAAE)
+2. [**Optexity Tutorial Part 2 | Training AI with Human Demonstrations**](https://www.youtube.com/watch?v=CMreOrcN7bc)
+3. [**Optexity Tutorial Part 3 | AI Agent in Action!**](https://www.youtube.com/watch?v=0eq9rY2Su5E)
 
 ## Setup
 
@@ -100,12 +112,7 @@ This project builds upon and extends the work of:
 - [Playwright](https://playwright.dev/) - For reliable web testing and automation capabilities
 - [LLaMA-Factory](https://github.com/hiyouga/LLaMA-Factory) - For efficient foundation model fine-tuning
 
-## Detailed Tutorial Videos
-Explore our step-by-step video guides to get started with Optexity:
 
-1. [**Optexity Tutorial Part 1 | Introduction and State of Browser Agents for Software Use**](https://www.youtube.com/watch?v=5gsb4z5FAAE)
-2. [**Optexity Tutorial Part 2 | Training AI with Human Demonstrations**](https://www.youtube.com/watch?v=CMreOrcN7bc)
-3. [**Optexity Tutorial Part 3 | AI Agent in Action!**](https://www.youtube.com/watch?v=0eq9rY2Su5E)
 
 ## Community & Support
 - Report issues on [GitHub](https://github.com/Optexity/ComputerGYM/issues)
