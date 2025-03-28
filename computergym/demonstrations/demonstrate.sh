@@ -33,6 +33,10 @@ mkdir -p "$SAVE_DIR"
 
 # Storage file for playwright
 STORAGE_FILE="cache_dir/auth.json"
+mkdir -p "cache_dir"
+if [ ! -f "$STORAGE_FILE" ]; then
+    echo "{}" > "$STORAGE_FILE"
+fi
 PLAYWRIGHT_PATH="playwright/"
 
 # Process each task

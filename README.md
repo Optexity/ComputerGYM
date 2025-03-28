@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo_optexity.svg" alt="Optexity Logo" width="300"/>
+  <img src="computergym/assets/logo_optexity.svg" alt="Optexity Logo" width="300"/>
 </p>
 
 <p align="center">
@@ -61,6 +61,7 @@ Explore our step-by-step video guides to get started with Optexity:
    npm install
    npm run build
    playwright install
+   cd ..
    ```
 
 ## Workflow
@@ -94,6 +95,14 @@ Explore our step-by-step video guides to get started with Optexity:
    ```bash
    python AgentAI/agentai/main.py --url "https://app.hubspot.com" --port 8000 --log_to_console --goal "change currency to SGD" --storage_state cache_dir/auth.json --model vllm
    ```
+
+## Testing Vanilla Gemini Directly(Optional)
+
+To evaluate vanilla gemini 2.0 flash for a specific web task, execute:
+    ```bash
+    EXPORT GEMINI_API_KEY=<YOUR_GEMINI_API_KEY>
+    python AgentAI/agentai/main.py --url "https://app.hubspot.com" --port 8000 --log_to_console --goal "change currency to SGD" --storage_state cache_dir/auth.json --model gemini
+    ```
 
 ## Documentation
 For comprehensive information on configuration options and advanced usage patterns, please refer to the detailed documentation available in each repository:
