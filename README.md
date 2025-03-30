@@ -99,10 +99,10 @@ Explore our step-by-step video guides to get started with Optexity:
 ## Testing Vanilla Gemini Directly(Optional)
 
 To evaluate vanilla gemini 2.0 flash for a specific web task, execute:
-    ```bash
-    EXPORT GEMINI_API_KEY=<YOUR_GEMINI_API_KEY>
-    python AgentAI/agentai/main.py --url "https://app.hubspot.com" --port 8000 --log_to_console --goal "change currency to SGD" --storage_state cache_dir/auth.json --model gemini
-    ```
+  ```bash
+  EXPORT GEMINI_API_KEY=<YOUR_GEMINI_API_KEY>
+  python AgentAI/agentai/main.py --url "https://app.hubspot.com" --port 8000 --log_to_console --goal "change currency to SGD" --storage_state cache_dir/auth.json --model gemini
+  ```
 
 ## Documentation
 For comprehensive information on configuration options and advanced usage patterns, please refer to the detailed documentation available in each repository:
