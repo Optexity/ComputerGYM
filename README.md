@@ -1,5 +1,9 @@
 <p align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="computergym/assets/logo_optexity.svg">
+  <source media="(prefers-color-scheme: light)" srcset="computergym/assets/logo_optexity_black.svg">
   <img src="computergym/assets/logo_optexity.svg" alt="Optexity Logo" width="300"/>
+</picture>
 </p>
 
 <p align="center">
@@ -20,6 +24,7 @@
   </p>
 </div>
 
+<br/><br/>
 # Optexity: Foundation Model Training Using Human Demonstrations
 
 ## Overview
@@ -64,6 +69,17 @@ Explore our step-by-step video guides to get started with Optexity:
    cd ..
    ```
 
+## Testing Vanilla Gemini Directly(Optional)
+
+To evaluate vanilla gemini 2.0 flash for a specific web task, execute:
+  ```bash
+  EXPORT GEMINI_API_KEY=<YOUR_GEMINI_API_KEY>
+  python AgentAI/agentai/main.py --url "https://app.hubspot.com" --port 8000 --log_to_console --goal "change currency to SGD" --storage_state cache_dir/auth.json --model gemini
+  ```
+Next section shows you how to improve the performance of these agents on specific tasks.
+> Pro Tip: You can visit https://aistudio.google.com/apikey to create a free gemini api key to test out any task on any website.
+
+
 ## Workflow
 
 1. **Recording Demonstrations**
@@ -95,14 +111,6 @@ Explore our step-by-step video guides to get started with Optexity:
    ```bash
    python AgentAI/agentai/main.py --url "https://app.hubspot.com" --port 8000 --log_to_console --goal "change currency to SGD" --storage_state cache_dir/auth.json --model vllm
    ```
-
-## Testing Vanilla Gemini Directly(Optional)
-
-To evaluate vanilla gemini 2.0 flash for a specific web task, execute:
-  ```bash
-  EXPORT GEMINI_API_KEY=<YOUR_GEMINI_API_KEY>
-  python AgentAI/agentai/main.py --url "https://app.hubspot.com" --port 8000 --log_to_console --goal "change currency to SGD" --storage_state cache_dir/auth.json --model gemini
-  ```
 
 ## Documentation
 For comprehensive information on configuration options and advanced usage patterns, please refer to the detailed documentation available in each repository:
