@@ -67,6 +67,8 @@ Explore our step-by-step video guides to get started with Optexity:
    npm run build
    playwright install
    cd ..
+   mkdir -p cache_dir
+   touch cache_dir/auth.json
    ```
 
 ## Testing Vanilla Gemini Directly(Optional)
